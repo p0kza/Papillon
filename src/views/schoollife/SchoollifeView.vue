@@ -6,11 +6,11 @@
 		IonHeader,
 		IonToolbar,
 		IonList,
-		IonListHeader,
 		IonItem,
 		IonChip,
 		IonPage,
-		alertController
+		alertController,
+		IonLabel
 	} from '@ionic/vue';
 
 	import GetAbsences from '@/functions/fetch/GetAbsences.js';
@@ -19,16 +19,18 @@
 
 	import getEDSchoollife from '@/functions/fetch/getEDSchoollife.js'
 
+	import SchoollifeAbsItemView from "./SchoollifeAbsItemView.vue"
+
 	export default defineComponent({
 		name: 'FolderPage',
 		components: {
 			IonHeader,
 			IonToolbar,
 			IonList,
-			IonListHeader,
 			IonItem,
 			IonChip,
 			IonPage,
+			IonLabel
 		},
 		setup() {
 			return {
@@ -108,12 +110,14 @@
 		},
 		data() {
 			return {
+				SchoollifeAbsItemView: SchoollifeAbsItemView,
 				absences: [],
 				absError: false,
 				punishments: [],
 				punishmentsError: false,
 				delays: [],
-				delaysError: false
+				delaysError: false,
+				loginService: localStorage.getItem("loginService")
 			}
 		},
 		mounted() {
@@ -137,24 +141,40 @@
 			<IonToolbar>
 
 				<ion-buttons slot="start">
-					<ion-menu-button color="dark" mode="md"></ion-menu-button>
+					<ion-menu-button color="dark"></ion-menu-button>
 				</ion-buttons>
 
-				<ion-title mode="md">Vie scolaire</ion-title>
+				<ion-title>Vie scolaire</ion-title>
 
 			</IonToolbar>
 		</IonHeader>
 
 		<ion-content>
+			<ion-header collapse="condense">
+				<ion-toolbar>
+					<ion-title size="large">Vie scolaire</ion-title>
+				</ion-toolbar>
+			</ion-header>
+
 			<ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
 				<ion-refresher-content></ion-refresher-content>
 			</ion-refresher>
 
-			<ion-list>
-				<ion-list-header>
-					<ion-label>Absences</ion-label>
-				</ion-list-header>
+			<ion-list inset>
+				<ion-item color="primary" id="DevSchoolLifeBanner">
+					<span class="material-symbols-outlined mdls" slot="start">gavel</span>
+					<ion-label class="ion-text-wrap">
+						<h2>L'onglet vie scolaire est en développement</h2>
+						<p>Il est possible que certaines fonctionnalités ne soient pas disponibles.</p>
+					</ion-label>
+				</ion-item>
+			</ion-list>
 
+			<IonLabel class="listGroupTitle">
+				<p>Absences</p>
+			</IonLabel>
+
+			<ion-list class="listGroup">
 				<ion-item v-if="absError">
 					<ion-label>
 						<p>Impossible de récupérer les absences pour le moment.</p>
@@ -167,37 +187,41 @@
 					</ion-label>
 				</ion-item>
 
-				<ion-item v-for="(miss, i) in absences" :key="i">
-					<span class="material-symbols-outlined mdls" slot="start">door_open</span>
+				<IonList v-for="(miss, i) in absences" :key="i">
+					<ion-nav-link router-direction="forward" :component="SchoollifeAbsItemView" :componentProps="{evenement1: encodeURIComponent(JSON.stringify(miss))}">
+						<IonItem button>
+							<span class="material-symbols-outlined mdls" slot="start">door_open</span>
 
-					<ion-label>
-						<h2 v-if="miss.data.reasons.length !== 0">{{ miss.data.reasons[0] }}</h2>
-						<h2 v-else>Absence non justifiée</h2>
+							<ion-label>
+								<h2 v-if="miss.data.reasons.length !== 0">{{ miss.data.reasons[0] }}</h2>
+								<h2 v-else>Absence non justifiée</h2>
 
-						<p>{{ miss.data.hours }} heures manquées</p>
+								<p v-if="miss.data.hours !== '0h00'">{{ miss.data.hours }} {{ this.loginService === 'ecoledirecte' ? '' : miss.data.hours === '1h00' ? 'heure' : 'heures'  }} {{ miss.data.hours === '1h00' ? 'manquée' : 'manquées' }}</p>
+								<h3>le {{ new Date(miss.date.from).toLocaleDateString('fr-FR', { weekday: 'long', month: 'long', day: 'numeric' }) }} à {{ new Date (miss.date.from).toLocaleDateString('fr-FR', {hour: '2-digit', minute: '2-digit'}).split(' ')[1] }}</h3>
+								<!-- <h3 v-else>le {{ new Date(miss.date.from).toLocaleDateString('fr-FR', { weekday: 'long', month: 'long', day: 'numeric' }) }} à {{  }}</h3> -->
+							</ion-label>
 
-						<h3>le {{ new Date (miss.date.from).toLocaleDateString('fr-FR', { weekday: 'long', month: 'long', day: 'numeric' }) }} à {{ new Date (miss.date.from).toLocaleDateString('fr-FR', {hour: '2-digit', minute: '2-digit'}).split(' ')[1] }}</h3>
-					</ion-label>
-
-					<ion-chip slot="end" v-if="!miss.data.isJustified" color="warning">
-						<span class="material-symbols-outlined mdls">error</span>
-						Injustifié
-					</ion-chip>
-					<ion-chip slot="end" v-else color="success">
-						<span class="material-symbols-outlined mdls">check</span>
-						Justifié
-					</ion-chip>
-				</ion-item>
+							<ion-chip slot="end" v-if="!miss.data.isJustified" color="warning">
+								<span class="material-symbols-outlined mdls">error</span>
+								Injustifié
+							</ion-chip>
+							<ion-chip slot="end" v-else color="success">
+								<span class="material-symbols-outlined mdls">check</span>
+								Justifié
+							</ion-chip>
+						</IonItem>
+					</ion-nav-link>
+				</IonList>
 			</ion-list>
 
-			<ion-list>
-				<ion-list-header>
-					<ion-label>Punitions</ion-label>
-				</ion-list-header>
+			<IonLabel class="listGroupTitle">
+				<p>Punitions</p>
+			</IonLabel>
 
+			<ion-list class="listGroup">
 				<ion-item v-if="punishmentsError">
 					<ion-label>
-						<p>Impossible de récupérer les absences pour le moment.</p>
+						<p>Impossible de récupérer les punitions pour le moment.</p>
 					</ion-label>
 				</ion-item>
 
@@ -207,10 +231,10 @@
 					</ion-label>
 				</ion-item>
 
-				<ion-item v-for="(punish, i) in punishments" :key="i">
+					<ion-item v-for="(punish, i) in punishments" :key="i" >
 					<span class="material-symbols-outlined mdls" slot="start">gavel</span>
 
-					<ion-label>
+					<ion-label class="ion-text-wrap">
 						<h2>{{ punish.homeworks.text }}</h2>
 
 						<p>{{ punish.data.reasons.text[0] }} - {{ punish.data.reasons.circumstances }}</p>
@@ -220,11 +244,11 @@
 				</ion-item>
 			</ion-list>
 
-			<ion-list>
-				<ion-list-header>
-					<ion-label>Retards</ion-label>
-				</ion-list-header>
+			<IonLabel class="listGroupTitle">
+				<p>Retards</p>
+			</IonLabel>
 
+			<ion-list class="listGroup">
 				<ion-item v-if="delaysError">
 					<ion-label>
 						<p>Impossible de récupérer les retards pour le moment.</p>
@@ -270,5 +294,9 @@
 <style scoped>
 	ion-chip span {
 		margin-right: 5px;
+	}
+
+	#DevSchoolLifeBanner * {
+		color: #fff;
 	}
 </style>

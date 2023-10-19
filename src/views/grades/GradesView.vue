@@ -19,13 +19,15 @@
 		IonModal,
 		IonSelect,
 		IonNavLink,
-		IonSpinner
+		IonSpinner,
+		IonChip,
+		alertController
 	} from '@ionic/vue';
 
 	import displayToast from '@/functions/utils/displayToast.js';
 
 	import MarkView from './MarkView.vue';
-
+	import GradesInsightsView from './GradesInsightsView.vue';
 	import GetGrades from '@/functions/fetch/GetGrades.js';
 	import ChangePeriod from '@/functions/login/ChangePeriod.js';
 
@@ -43,6 +45,7 @@
 			IonMenuButton,
 			IonPage,
 			IonButtons,
+			IonChip,
 			IonCard,
 			IonItem,
 			IonLabel,
@@ -57,15 +60,16 @@
 			IonSpinner
 		},
 		data() {
-			let gradesDisplay = localStorage.getItem('gradesDisplay') || 'Liste';
+			const gradesDisplay = localStorage.getItem('gradesDisplay') || 'Liste';
 
-			let isAndroid = Capacitor.getPlatform() !== "ios";
+			const isAndroid = Capacitor.getPlatform() !== "ios";
 
 			console.log(isAndroid);
 
 			return {
 				md: isAndroid,
 				MarkView: MarkView,
+				GradesInsightsView: GradesInsightsView,
 				display: gradesDisplay,
 				grades: [],
 				fullGrades: [],
@@ -93,7 +97,7 @@
 		},
 		methods: {
 			getPeriods() {
-				let allPeriods = JSON.parse(localStorage.getItem('userData')).periods;
+				const allPeriods = JSON.parse(localStorage.getItem('userData')).periods;
 
 				// find period with actual = true
 				let actualPeriod = allPeriods.find(period => period.actual == true);
@@ -125,10 +129,10 @@
 			},
 			segChange() {
 				if (!this.segChangeTimeout) {
-					let newSegment = this.$refs.segment.$el.value;
+					const newSegment = this.$refs.segment.$el.value;
 
 					// get corresponding period name from id
-					let newPeriod = this.periods.find(period => period.id == newSegment);
+					const newPeriod = this.periods.find(period => period.id == newSegment);
 
 					// save in localstorage
 					localStorage.setItem('currentPeriod', JSON.stringify(newPeriod));
@@ -144,7 +148,7 @@
 				}
 			},
 			getClosestGradeEmoji(subjectName) {
-				let gradeEmojiList = {
+				const gradeEmojiList = {
 					'numerique': '💻',
 					'moral': '⚖️',
 					'sport': '🏀',
@@ -166,13 +170,13 @@
 					'tech': '🔧',
 					'musique': '🎼',
 					'musical': '🎼',
-					'vie': '🌱',
+					'vie': '🧬',
 					'stage': '👔',
 					'default': '📝'
 				}
 
 				// get emoji with key in subject name
-				let closest = Object.keys(gradeEmojiList).reduce((a, b) => {
+				const closest = Object.keys(gradeEmojiList).reduce((a, b) => {
 					return subjectName.toLowerCase().includes(a) ? a : b
 				});
 
@@ -193,7 +197,7 @@
 				this.$refs.averageModal.$el.present(subject);
 			},
 			editMarks(grades) {
-				let out_of_20 = this.out_of_20;
+				const out_of_20 = this.out_of_20;
 
 				grades.forEach(subject => {
 					subject.marks.forEach(mark => {
@@ -211,7 +215,7 @@
 				return grades;
 			},
 			changeDisplay(e) {
-				let val = e.detail.value;
+				const val = e.detail.value;
 
 				this.display = val;
 				localStorage.setItem('gradesDisplay', val);
@@ -257,16 +261,16 @@
 				})
 			},
 			getStringToAsciiArray(string) {
-				let charCodeArr = [];
+				const charCodeArr = [];
 				for(let i = 0; i < string.length; i++){
-					let code = string.charCodeAt(i);
+					const code = string.charCodeAt(i);
 					charCodeArr.push(code);
 				}
 
 				return charCodeArr;
 			},
 			async shareGrade(grade, color) {
-				let sharedGrade = {
+				const sharedGrade = {
 					grade: {
 						value: grade.grade.value,
 						out_of: grade.grade.out_of,
@@ -323,7 +327,7 @@
 				urlElems += sharedGrade.grade.min;
 
 				// base64 encode urlElems
-				let url = "https://getpapillon.xyz/grade?g=" + btoa(urlElems);
+				const url = "https://getpapillon.xyz/grade?g=" + btoa(urlElems);
 
 				// share url
 				await Share.share({
@@ -343,14 +347,14 @@
 				});
 			},
 			searchGrades() {
-				let search1 = this.$refs.searchBarIos.$el.value;
-				let search2 = this.$refs.searchBarMd.$el.value;
+				const search1 = this.$refs.searchBarIos.$el.value;
+				const search2 = this.$refs.searchBarMd.$el.value;
 
 
 				if (search1 == "" && search2 == "") {
 					this.grades = this.fullGrades;
 				} else {
-					let search = search1 == "" ? search2 : search1;
+					const search = search1 == "" ? search2 : search1;
 					this.grades = this.fullGrades.filter(subject => {
 						return subject.name.toLowerCase().includes(search.toLowerCase());
 					});
@@ -364,6 +368,16 @@
 				this.selectedGradeSet = true;
 				this.$refs.gradeModal.$el.present();
 			},
+			async displayBiasedMsg() {
+				const alert = await alertController.create({
+						header: 'Comprendre la moyenne +/-',
+						message: 'Les moyennes maximales et minimales de la classe sont calculées à partir des moyennes maximales et minimales de chaque groupe, uniquement pour les enseignements que vous suivez. Cela peut fausser les chiffres qui ne sont affichés qu\'à titre indicatif uniquement.',
+						mode: 'md',
+						buttons: ['Je comprends']
+					});
+	
+				await alert.present();
+			}
 		},
 		mounted() {
 			this.isLoading = true;
@@ -431,7 +445,9 @@
 						</ion-select>
 					</div>
 
-					<ion-spinner v-if="isLoading"></ion-spinner>
+					<Transition name="ElemScale">
+						<ion-spinner v-if="isLoading"></ion-spinner>
+					</Transition>
 				</ion-buttons>
 			</IonToolbar>
 			<IonToolbar v-if="md">
@@ -490,7 +506,7 @@
 				</ion-card>
 			</div> -->
 
-			<transition-group name="ElemAnim" tag="div" id="NotesData">
+			<transition-group name="CoursAnimLower" tag="div" id="NotesData">
 				<ion-item v-if="loginService === 'ecoledirecte'">
 					<div class="alphaMessage">
 						<span class="material-symbols-outlined mdls icon">warning</span>
@@ -564,7 +580,7 @@
 					</div>
 
 					<ion-list lines="inset" class="gradesList" v-if="display == 'Liste'">
-						<IonNavLink v-for="(mark, i) in subject.marks" :key="i" router-direction="forward" :component="MarkView" :componentProps="{markID: mark.id}">
+						<IonNavLink class="gradeNavLink" v-for="(mark, i) in subject.marks" :key="i" router-direction="forward" :component="MarkView" :componentProps="{markID: mark.id}">
 							<ion-item class="gradeItem" button detail="false">
 								<ion-text slot="start" class="emoji">{{ getClosestGradeEmoji(subject.name) }}</ion-text>
 
@@ -599,6 +615,19 @@
 				</div>
 			</div>
 
+			<ion-list inset>
+				<IonNavLink router-direction="forward" :component="GradesInsightsView">
+					<IonItem button>
+						<span class="material-symbols-outlined mdls" slot="start">query_stats</span>
+						<IonLabel class="ion-text-wrap">
+							<h2>Papillon Insights <ion-chip class="small_chip" color="warning">Nouveau</ion-chip></h2>
+							<p>Statistiques, analyses et données complémentaires sur vos notes</p>  
+						</IonLabel>
+
+					</IonItem>
+				</IonNavLink>
+			</ion-list>
+
 			<IonList v-if="this.grades.length != 0 && averages.average != -1">
 				<IonListHeader>
 					<IonLabel>
@@ -620,7 +649,7 @@
 						<h2>{{ classAverages.average.toFixed(2) }}<small>/20</small></h2>
 					</IonLabel>
 				</IonItem>
-				<div style="display:flex">
+				<div style="display:flex" @click="displayBiasedMsg">
 					<IonItem>
 						<span class="material-symbols-outlined mdls" slot="start">swap_vert</span>
 						<IonLabel>
@@ -985,9 +1014,24 @@
 		background: var(--ion-color-step-50);
 	}
 
+	@media screen and (min-width: 900px) {
+		#NotesData {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+
+	.ios .gradeItem {
+		--border-color: var(--ion-color-step-150);
+	}
+
+	.gradeNavLink:last-child .gradeItem {
+		--border-color: transparent;
+	}
+
 	ion-card {
 		box-shadow: var(--ion-box-shadow);
-		background: var(--ion-toolbar-background);
+		background: var(--ion-item-background);
 	}
 
 	.dark ion-card {
@@ -1023,6 +1067,11 @@
 
 	.displaySel {
 		padding: 0;
+	}
+
+	#selectionMode {
+		height: 32px;
+		padding-right: 2px !important;
 	}
 
 	#selectionMode * {

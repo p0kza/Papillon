@@ -1,6 +1,6 @@
 <script>
 	import { defineComponent } from 'vue';
-	import { IonHeader, IonContent, IonToolbar, IonTitle, IonMenuButton, IonPage, IonButtons, IonList, IonLabel, IonItem, IonNavLink, IonRefresher, IonRefresherContent, IonCheckbox, IonButton, IonModal, IonDatetime, alertController } from '@ionic/vue';
+	import { IonHeader, IonContent, IonToolbar, IonTitle, IonMenuButton, IonPage, IonButtons, IonList, IonLabel, IonItem, IonNavLink, IonRefresher, IonRefresherContent, IonCheckbox, IonButton, IonModal, IonFab, IonDatetime, alertController } from '@ionic/vue';
 
     import { alertCircle } from 'ionicons/icons';
 
@@ -37,7 +37,8 @@
             IonDatetime,
             IonItem,
             IonLabel,
-            IonNavLink
+            IonNavLink,
+            IonFab
 		},
 		setup() {
 			return { 
@@ -96,7 +97,7 @@
                         {
                             text: 'Ajouter',
                             handler: async (data) => {
-                                let text = data.content;
+                                const text = data.content;
                                 let subject = data.subject;
 
                                 if (!subject) {
@@ -108,7 +109,7 @@
                                 }
 
                                 // get --ion-color-primary
-                                let color = getComputedStyle(document.documentElement).getPropertyValue('--ion-color-primary');
+                                const color = getComputedStyle(document.documentElement).getPropertyValue('--ion-color-primary');
 
                                 // get homework description
                                 let shortText = text;
@@ -117,7 +118,7 @@
                                     shortText = shortText.substring(0, 80) + '...';
                                 }
 
-                                let newHomework = {
+                                const newHomework = {
                                     data: {
                                         id: "custom_" + Math.random().toString(36).substr(2, 9),
                                         date: this.$rn.toISOString().split('T')[0].replace(/-/g, "/") + " 00:00",
@@ -160,15 +161,15 @@
               return localStorage.loginService === 'ecoledirecte'
             },
             getHomeworks(force, goTo, event) {
-                let startloading = setTimeout(() => {
+                const startloading = setTimeout(() => {
                     this.isLoading = true;
                 }, 500);
 
                 for (let i = 0; i < 3; i++) {
-                    let index = this.$refs.swiper.$el.swiper.realIndex + (i - 1);
+                    const index = this.swiper.realIndex + (i - 1);
 
                     // get index diff
-                    let indexDiff = this.baseIndex - index;
+                    const indexDiff = this.baseIndex - index;
 
                     // get rn
                     let selectedRN = new Date(this.baseRn);
@@ -224,7 +225,7 @@
                 // for each homework
                 for (let i = 0; i < homeworks.length; i++) {
                     // set homework to edit
-                    let homework = homeworks[i];
+                    const homework = homeworks[i];
 
                     // remove <br/> tags from homework.homework.content
                     homeworks[i].homework.shortContent = homework.homework.shortContent.replace(/[<]br[^>]*[>]/gi,"");
@@ -234,15 +235,15 @@
                 return homeworks;
             },
             createDateString(date) {
-                let dateObject = new Date(date);
-                let day_string = dateObject.toLocaleString('default', { weekday: 'long' }).slice(0, 3);
+                const dateObject = new Date(date);
+                const day_string = dateObject.toLocaleString('default', { weekday: 'long' }).slice(0, 3);
                 // return string like "jeu. 1"
                 return day_string + ". " + dateObject.getDate();
             },
 			rnInputChanged() {
                 if(!this.isChangingDate) {
                     // get new date from rnInput
-                    let newDate = new Date(this.$refs.rnInput.$el.value);
+                    const newDate = new Date(this.$refs.rnInput.$el.value);
 
                     // update rn
                     this.$rn = newDate;
@@ -265,7 +266,7 @@
                 this.$refs.rnPickerModal.$el.present();
             },
             resetSwiper() {
-                // this.$refs.swiper.$el.swiper.slideTo(1, 0);
+                // this.swiper.slideTo(1, 0);
                 return false;
             },
             handleRefresh(event) {
@@ -279,15 +280,14 @@
                 hapticsController.notification('success');
 
                 // vars
-                let homeworkID = hw.data.id;
-                let dateSet = new Date(this.$rn)
+                const homeworkID = hw.data.id;
+                const dateSet = new Date(this.$rn)
 
-                let checkboxID = `checkbox_${hw.data.id}`;
-                let checkbox = document.getElementById(checkboxID);
+                const checkboxID = `checkbox_${hw.data.id}`;
+                const checkbox = document.getElementById(checkboxID);
 
                 // new send request
                 if(!this.dontRetryCheck) {
-                  console.log(homeworkID)
                     tickHomework([homeworkID, dateSet, hw]).then(() => {
                         setTimeout(() => {
                             this.dontRetryCheck = true;
@@ -402,6 +402,14 @@
                 <ion-refresher-content></ion-refresher-content>
             </ion-refresher>
 
+            <IonFab slot="fixed" vertical="bottom" horizontal="end" class="newHomeworksBtnFab">
+				<ion-button @click="addHomework($event)" size="large" shape="round" class="newHomeworksBtn" mode="md" aria-label="Ajouter un devoir">
+					<span class="material-symbols-outlined mdls" slot="icon-only">add</span>
+				</ion-button>
+			</IonFab>
+
+
+
             <div id="noTouchZone"></div>
 
             <swiper class="swiper" ref="swiper" :modules="[Virtual]" virtual :initialSlide="baseIndex" :speed="200" :spaceBetween="10" :preventClicks="true">
@@ -409,34 +417,40 @@
                 v-for="(slideContent, index) in slides"
                 :key="index"
                 :virtualIndex="index">
-                    <IonList v-for="homework in days[`${index}`]" :key="homework.id" inset class="hwListItem">
-                        <IonItem button >
-                            <div slot="start">
-                                <ion-checkbox :id="`checkbox_${homework.data.id}`" :checked="homework.data.done" @ionChange="changeDone(homework)"></ion-checkbox>
-                            </div>
-                            
-                            <IonNavLink class="navLink"  router-direction="forward" :component="HomeworkItemView" :componentProps="{urlHw: encodeURIComponent(JSON.stringify(homework))}">
-                                <IonLabel :style="`--courseColor: ${homework.data.color};`" class="ion-text-wrap">
-                                    <p><span class="courseColor"></span> {{ homework.homework.subject }}</p>
-                                    <h5 v-if="isED()" v-html="homework.homework.shortContent" class="hwContent"></h5>
-                                    <h5 v-else class="hwContent">{{ homework.homework.shortContent }}</h5>
+                    <transition-group name="CoursAnim" tag="div" id="DayData">
+                        <div v-if="currentIndex == index && days[index].length > 0">
+                            <IonList v-for="homework in days[`${index}`]" :key="homework.id" inset class="hwListItem">
+                                <IonItem button >
+                                    <div slot="start">
+                                        <ion-checkbox :id="`checkbox_${homework.data.id}`" :checked="homework.data.done" @ionChange="changeDone(homework)"></ion-checkbox>
+                                    </div>
+                                    
+                                    <IonNavLink class="navLink"  router-direction="forward" :component="HomeworkItemView" :componentProps="{urlHw: encodeURIComponent(JSON.stringify(homework))}">
+                                        <IonLabel :style="`--courseColor: ${homework.data.color};`" class="ion-text-wrap">
+                                            <p><span class="courseColor"></span> {{ homework.homework.subject }}</p>
+                                            <h5 v-if="isED()" v-html="homework.homework.shortContent" class="hwContent"></h5>
+                                            <h5 v-else class="hwContent">{{ homework.homework.shortContent }}</h5>
 
-                                    <p v-if="homework.files.length > 0">
-                                        <span>{{ homework.files[0].name }}</span>
-                                    </p>
-                                </IonLabel>
-                            </IonNavLink>
-                        </IonItem>
-                    </IonList>
+                                            <p v-if="homework.files.length > 0">
+                                                <span>{{ homework.files[0].name }}</span>
+                                            </p>
+                                        </IonLabel>
+                                    </IonNavLink>
+                                </IonItem>
+                            </IonList>
+                        </div>
+                    </transition-group>
 
                     <div v-if="days[`${index}`]">
-                        <div class="NoCours" v-if="days[`${index}`].length == 0 && !days[`${index}`].error && !days[`${index}`].loading">
-                            <h1>😎</h1>
-                            <h2>Aucun devoir pour ce jour</h2>
-                            <p>Sélectionnez un autre jour dans le calendrier ou balayez l’écran pour changer de journée.</p>
+                        <Transition name="CoursAnim">
+                            <div class="NoCours" v-if="days[`${index}`].length == 0 && !days[`${index}`].error && !days[`${index}`].loading && currentIndex == index">
+                                <h1>😎</h1>
+                                <h2>Aucun devoir pour ce jour</h2>
+                                <p>Sélectionnez un autre jour dans le calendrier ou balayez l’écran pour changer de journée.</p>
 
-                            <ion-button mode="md" fill="clear" @click="changernPickerModalOpen(true)" class="changeDayButton">Ouvrir le calendrier</ion-button>
-                        </div>
+                                <ion-button mode="md" fill="clear" @click="changernPickerModalOpen(true)" class="changeDayButton">Ouvrir le calendrier</ion-button>
+                            </div>
+                        </Transition>
 
                         <div class="NoCours" v-if="days[`${index}`].length == 0 && days[`${index}`].error == 'ERR_NETWORK' && !days[`${index}`].loading && !connected">
                             <h1>🌏</h1>
@@ -455,18 +469,6 @@
                             <IonSpinner></IonSpinner>
                         </div>
                     </div>
-
-                    <IonList inset class="hwListItem add">
-                        <IonItem button detail="false" @click="addHomework($event)">
-                            <span class="material-symbols-outlined mdls" slot="start">add</span>
-                            <IonNavLink class="navLink" router-direction="forward" :component="AddHomeworkView">
-                                <IonLabel>
-                                    <h2>Ajouter un devoir</h2>
-                                    <p>Ajouter un devoir manuellement</p>
-                                </IonLabel>
-                            </IonNavLink>
-                        </IonItem>
-                    </IonList>
 
                 </swiper-slide>
             </swiper>
@@ -609,6 +611,11 @@
         border: 1px solid var(--ion-color-step-100) !important;
         --background: transparent !important;
     }
+
+    .newHomeworksBtn {
+		width: 56px;
+		height: 56px;
+	}
 
     .ios .hwListItem.add ion-item::part(native) {
         border-radius: 12px !important;

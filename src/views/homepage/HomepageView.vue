@@ -27,7 +27,7 @@ import { NotificationBadge } from 'capacitor-notification-badge';
 
 import hapticsController from '@/functions/utils/hapticsController.js';
 
-import { StatusBar, Style } from '@capacitor/status-bar';
+//import { StatusBar, Style } from '@capacitor/status-bar';
 
 import { tickHomework } from "@/functions/fetch/GetHomeworks.js";
 
@@ -116,18 +116,15 @@ export default defineComponent({
 	},
 	methods: {
 		goto(url) {
-			setTimeout(() => {
-				StatusBar.setStyle({ style: Style.Default })
-			}, 100);
 			document.dispatchEvent(new CustomEvent('navTransitionEnable'));
 			this.$router.push(url);
 		},
 		randomEmoji() {
-			let list = ["😊", "😎", "😴", "👌", "🌞", "📚", "💪", "💤", "😉", "🥱"]
+			const list = ["😊", "😎", "😴", "👌", "🌞", "📚", "💪", "💤", "😉", "🥱"]
 			return list[Math.floor(Math.random() * list.length)];
 		},
 		randomMsg() {
-			let list = [
+			const list = [
 				"Temps calme",
 				"Pas de cours, on révise ?",
 				"C'est la sieste (ou pas)",
@@ -145,20 +142,20 @@ export default defineComponent({
 			return list[Math.floor(Math.random() * list.length)];
 		},
 		editTimetable(timetable) {
-			let now = new Date();
+			const now = new Date();
 			let lessons = []
 
 			timetable = timetableEdit(timetable);
 
 			// add custom courses
-			let customCourses = JSON.parse(localStorage.getItem('customCourses')) || [];
+			const customCourses = JSON.parse(localStorage.getItem('customCourses')) || [];
 			customCourses.forEach((customCourse) => {
 				// if course is in the same day
-				let customDay = new Date(customCourse.day);
-				let currentDay = new Date(this.$rn);
+				const customDay = new Date(customCourse.day);
+				const currentDay = new Date(this.$rn);
 
-				let st = new Date(customCourse.course.time.start);
-				let en = new Date(customCourse.course.time.end);
+				const st = new Date(customCourse.course.time.start);
+				const en = new Date(customCourse.course.time.end);
 
 				// make st and en the same day as currentDay
 				st.setDate(currentDay.getDate());
@@ -191,12 +188,12 @@ export default defineComponent({
 
 			// get next lesson (cours.time.start)
 			lessons = timetable.filter((lesson) => {
-				let lessonStart = new Date(lesson.time.start);
-				let lessonEnd = new Date(lesson.time.end);
+				const lessonStart = new Date(lesson.time.start);
+				const lessonEnd = new Date(lesson.time.end);
 
 				// get minutes before next lesson
 				let mins = Math.floor((lessonStart - now) / 1000 / 60);
-				let gap = -((Math.floor((lessonEnd - lessonStart) / 1000 / 60)) / 2);
+				const gap = -((Math.floor((lessonEnd - lessonStart) / 1000 / 60)) / 2);
 
 				if (lessons.length != 0) {
 					return false;
@@ -208,11 +205,11 @@ export default defineComponent({
 				// if less than 60 mins
 				if (mins < 60 && mins >= 0) {
 					if (mins > 1) {
-						this.nextCoursTime = `dans ${mins} minutes`
+						this.nextCoursTime = `dans ${mins+1} minutes`
 					} else if (mins == 0) {
 						this.nextCoursTime = `dans moins d'une minute`
 					} else {
-						this.nextCoursTime = `dans ${mins} minute`
+						this.nextCoursTime = `dans ${mins+1} minute(s)`
 					}
 
 					this.nextCoursStarted = false;
@@ -224,14 +221,14 @@ export default defineComponent({
 					this.nextCoursStarted = true;
 
 					// get percentage of lesson done
-					let lessonTime = lessonEnd - lessonStart;
-					let lessonTimeDone = now - lessonStart;
-					let percentage = Math.floor((lessonTimeDone / lessonTime) * 100);
+					const lessonTime = lessonEnd - lessonStart;
+					const lessonTimeDone = now - lessonStart;
+					const percentage = Math.floor((lessonTimeDone / lessonTime) * 100);
 
 					this.nextCoursCompletion = percentage;
 
 					// get minutes before lesson ends
-					let endMins = Math.floor((lessonEnd - now) / 1000 / 60);
+					const endMins = Math.floor((lessonEnd - now) / 1000 / 60);
 
 					this.nextCoursTime = `${endMins} min rest.`;
 				} else {
@@ -268,14 +265,14 @@ export default defineComponent({
 			// if lessons is empty but not timetable, get last lesson
 			if (lessons.length == 0 && timetable.length > 0) {
 				for (let i = timetable.length - 1; i >= 0; i--) {
-					let lesson = timetable[i];
+					const lesson = timetable[i];
 
-					let lessonEnd = new Date(lesson.time.end);
-					let lessonStart = new Date(lesson.time.start);
-					let endMins = Math.floor((lessonEnd - now) / 1000 / 60);
-					let startMins = Math.floor((lessonStart - now) / 1000 / 60);
+					const lessonEnd = new Date(lesson.time.end);
+					const lessonStart = new Date(lesson.time.start);
+					const endMins = Math.floor((lessonEnd - now) / 1000 / 60);
+					const startMins = Math.floor((lessonStart - now) / 1000 / 60);
 
-					let lessonDuration = -(Math.floor((lessonEnd - lessonStart) / 1000 / 60));
+					const lessonDuration = -(Math.floor((lessonEnd - lessonStart) / 1000 / 60));
 
 					if (endMins < -120) {
 						continue;
@@ -285,9 +282,9 @@ export default defineComponent({
 						this.nextCoursStarted = true;
 
 						// get percentage of lesson done
-						let lessonTime = lessonEnd - lessonStart;
-						let lessonTimeDone = now - lessonStart;
-						let percentage = Math.floor((lessonTimeDone / lessonTime) * 100);
+						const lessonTime = lessonEnd - lessonStart;
+						const lessonTimeDone = now - lessonStart;
+						const percentage = Math.floor((lessonTimeDone / lessonTime) * 100);
 
 						this.nextCoursCompletion = percentage;
 
@@ -338,7 +335,7 @@ export default defineComponent({
 				this.showLoading = false;
 			}, this.fakeTime);
 
-			this.fakeTime = 0;
+			this.fakeTime = 100;
 
 			// timetable
 			const timetable = recap.timetable;
@@ -364,13 +361,13 @@ export default defineComponent({
 			this.newsLoading = false;
 		},
 		formatHomeworks(homeworks) {
-			let homeworkDays = [];
-			let today = new Date();
+			const homeworkDays = [];
+			const today = new Date();
 
 			// sort homeworks by day
 			for (let i = 0; i < homeworks.length; i++) {
-				let homework = homeworks[i];
-				let date = new Date(homework.data.date);
+				const homework = homeworks[i];
+				const date = new Date(homework.data.date);
 
 				homeworks[i].homework.content = homeworks[i].homework.content.replace('<br/>', ' ');
 
@@ -399,12 +396,12 @@ export default defineComponent({
 			return homeworkDays;
 		},
 		reorder() {
-			let order = ["comp-hw", "comp-tt"]
+			const order = ["comp-hw", "comp-tt"]
 
-			let components = document.getElementById("components");
+			const components = document.getElementById("components");
 			if (components) {
 				for (let i = 0; i < order.length; i++) {
-					let comp = document.getElementById(order[i]);
+					const comp = document.getElementById(order[i]);
 					if (comp) {
 						components.appendChild(comp);
 					}
@@ -413,13 +410,13 @@ export default defineComponent({
 		},
 		changeDone(hw, event) {
 			// vars
-			let homeworkID = hw.data.id;
-			let dateSet = new Date(hw.data.date)
+			const homeworkID = hw.data.id;
+			const dateSet = new Date(hw.data.date)
 
 			// add one day to date
 			dateSet.setDate(dateSet.getDate() + 1);
 
-			let disableConfetti = localStorage.getItem("disableConfetti");
+			const disableConfetti = localStorage.getItem("disableConfetti");
 
 			// if checked
 			if (event.target.checked) {
@@ -465,12 +462,12 @@ export default defineComponent({
 		},
 		checkUndone() {
 			// get number of undone homeworks (for badge)
-			let homeworkDays = this.homeworks;
+			const homeworkDays = this.homeworks;
 
-			let tomorrowDate = new Date(this.$rn);
+			const tomorrowDate = new Date(this.$rn);
 			tomorrowDate.setDate(tomorrowDate.getDate() + 1);
 
-			let tomorrow = homeworkDays.find((day) => {
+			const tomorrow = homeworkDays.find((day) => {
 				return day.date == tomorrowDate.toDateString();
 			});
 
@@ -538,10 +535,15 @@ export default defineComponent({
 			// get userData
 			this.userData = JSON.parse(localStorage.userData);
 
-			console.log(this.userData)
-
 			this.userName = JSON.parse(localStorage.userData).student.name.split(" ")[JSON.parse(localStorage.userData).student.name.split(" ").length - 1]
-			this.userFullName = JSON.parse(localStorage.userData).student.name
+			this.userFullName = JSON.parse(localStorage.userData).student.name;
+
+			// put last word of userFullName first
+			const name = this.userFullName.split(" ");
+			const lastName = name[name.length - 1];
+			name.pop();
+			name.unshift(lastName);
+			this.userFullName = name.join(" ");
 		},
 		getBoolOpt(opt, defaultVal = true) {
 			if (localStorage.getItem(opt)) {
@@ -557,7 +559,7 @@ export default defineComponent({
 		}
 	},
 	ionViewDidEnter() {
-		StatusBar.setStyle({ style: Style.Dark })
+		return false;
 	},
 	async mounted() {
 		const boolOpts = [
@@ -571,7 +573,7 @@ export default defineComponent({
 
 		if (localStorage.getItem('userData')) {
 			// get first name
-			let name = JSON.parse(localStorage.getItem('userData')).student.name;
+			const name = JSON.parse(localStorage.getItem('userData')).student.name;
 			// get last word of name
 			this.firstName = name.split(' ').pop();
 		}
@@ -583,7 +585,7 @@ export default defineComponent({
 
 		// get data
 		if (localStorage.getItem('recap')) {
-			let recap = JSON.parse(localStorage.getItem('recap'));
+			const recap = JSON.parse(localStorage.getItem('recap'));
 			this.useRecap(recap);
 		}
 
@@ -622,30 +624,37 @@ export default defineComponent({
 
 <template>
 	<ion-page ref="page">
-		<IonHeader class="AppHeader">
-			<IonToolbar class="toolbar" color="primary">
+		<IonHeader class="AppHeader" translucent>
+			<IonToolbar class="toolbar">
 				<ion-buttons slot="start">
 					<ion-menu-button mode="md"></ion-menu-button>
 				</ion-buttons>
-
-				<div class="profile">
-					<ion-avatar class="userAvatar" v-if="displayAvatar">
-						<img :src="avatar" />
-					</ion-avatar>
-
-					<div class="name">
+				
+				<ion-title mode="md">
+					<div class="profile">
 						<p>{{ displayFirstName ? userFullName : userName }}</p>
-						<h3>Page d'accueil</h3>
+						<h3>Vue d'ensemble</h3>
 					</div>
-				</div>
+				</ion-title>
+
 				<ion-buttons slot="end">
 					<ion-nav-link v-if="avatar" router-direction="forward" :component="UserView">
-
+						<ion-avatar class="userAvatar" v-if="displayAvatar">
+							<img :src="avatar" />
+						</ion-avatar>
 					</ion-nav-link>
 				</ion-buttons>
 			</IonToolbar>
-			<IonToolbar class="toolbar" color="primary" v-if="displayNextCourse">
-				<ion-list id="comp-tt" class="nextCourse" ref="comp-tt" lines="none">
+		</IonHeader>
+
+		<ion-content :fullscreen="true">
+			<ion-header collapse="condense" class="HomeHeader">
+				<ion-toolbar class="welcomeHeader">
+					<ion-title size="large" v-if="userName">Bonjour, {{ userName }} !</ion-title>
+					<ion-title size="large" v-else>Vue d'ensemble</ion-title>
+				</ion-toolbar>
+				<ion-toolbar>
+					<ion-list id="comp-tt" class="nextCourse" ref="comp-tt" lines="none" inset="true">
 					<div class="coursElemNext" v-for="cours in timetable" :key="cours.id"
 						:style="`--courseColor: ${cours.course.color};`">
 						<ion-item class="nextCours" button :detail="false" mode="md" lines="none" @click="goto('timetable')"
@@ -741,11 +750,12 @@ export default defineComponent({
 							<p><ion-skeleton-text :animated="true" style="width: 80%;"></ion-skeleton-text></p>
 						</ion-label>
 					</ion-item>
-				</ion-list>
-			</IonToolbar>
-		</IonHeader>
+					</ion-list>
+				</ion-toolbar>
+			</ion-header>
 
-		<ion-content :fullscreen="true">
+			
+
 			<ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
 				<ion-refresher-content></ion-refresher-content>
 			</ion-refresher>
@@ -896,35 +906,25 @@ export default defineComponent({
 </template>
 
 <style scoped>
-.profile {
-	display: flex;
-	gap: 16px;
-	margin-left: 12px;
-	padding-top: 8px;
-	padding-bottom: 8px;
-}
-
 .profile * {
 	margin: 0;
+	padding: 0;
 }
 
-.profile .name {
-	margin-top: -2.5px;
-}
-
-.profile .name p {
-	font-size: 15.5px;
+.profile p {
+	font-size: 15px;
 	opacity: 0.5;
+	font-weight: 400;
 }
 
-.profile .name h3 {
+.profile h3 {
 	font-size: 17.5px;
-	font-weight: 600 !important;
+	font-weight: 500 !important;
 }
 
 .userAvatar {
-	height: 38px;
-	width: 38px;
+	height: 32px;
+	width: 32px;
 }
 
 .iconDisplay {
@@ -964,27 +964,40 @@ export default defineComponent({
 }
 
 .nextCourse {
-	overflow: visible;
+	overflow: visible !important;
 	background: none;
 	padding: 0;
 	z-index: 99999;
+
+	margin: 0 12px !important;
+}
+
+.md .nextCourse {
+	margin: 0 16px !important;
+}
+
+.coursElemNext {
+	overflow: visible !important;
+}
+
+.coursElemNext {
+	overflow: visible !important;
 }
 
 .nextCours {
 	margin-top: 0 !important;
-	margin-bottom: 10px !important;
+	margin-bottom: 0px !important;
 	border-radius: 10px;
 	overflow: hidden !important;
 
-	box-shadow:
-		0px 0px 1px #00000020,
-		0px 1px 5px #00000010;
-	border-top: 0.5px solid #00000010;
+	margin: 0px 0px;
 
-	margin: 0px 12px;
-
-	--ion-item-background: #fff;
+	--ion-item-background: var(--ion-inset-background);
 	--ion-text-color: #000;
+
+	/* box-shadow: var(--ion-box-shadow); */
+
+	/* border: 0.5px solid #00000012; */
 }
 
 .dark .nextCours {
@@ -1012,6 +1025,7 @@ export default defineComponent({
 
 .nextCours .timeChip ion-chip {
 	font-weight: 500;
+	padding-top: 1px;
 }
 
 .nextCours .progression {
@@ -1060,21 +1074,16 @@ export default defineComponent({
 }
 
 .nextStatus {
-	width: calc(100% - 12px * 2);
+	width: 100%;
 	background: var(--courseColor) !important;
 
 	display: flex;
 	align-items: center;
 	gap: 12px;
 
-	margin: 0px 12px;
 	padding: 8px 24px;
 
-	margin-top: -11px;
-	margin-bottom: 10px;
 	color: #fff;
-
-	border-radius: 0 0 12px 12px !important;
 }
 
 .nextStatus * {
@@ -1088,6 +1097,7 @@ export default defineComponent({
 .nextStatus p {
 	font-size: 15px;
 	font-weight: 500;
+	font-family: var(--papillon-font);
 }
 
 .nextStatus.cancelled {
@@ -1101,7 +1111,7 @@ export default defineComponent({
 .homepage_divider {
 	display: flex;
 	align-items: center;
-	padding: 5px 18px;
+	padding: 3.5px 18px;
 	width: 210px;
 	background: #EADBFC;
 	border-radius: 0px 300px 300px 0px;
@@ -1123,7 +1133,8 @@ export default defineComponent({
 }
 
 .homepage_divider p span {
-	font-weight: 600;
+	font-weight: 500;
+	font-family: var(--papillon-font) !important;
 }
 
 .hw_group {
@@ -1272,5 +1283,25 @@ ion-buttons[slot=end] {
 	font-size: 22px !important;
 	margin-left: 2px;
 	margin-top: 2px;
+}
+
+.md .HomeHeader {
+	display: block !important;
+	box-shadow: none !important;
+	--border-color: transparent !important;
+	--border-width: 0 !important;
+	border-bottom: none !important;
+}
+
+.md .HomeHeader ion-toolbar {
+	--background: transparent;
+	--border-color: transparent;
+	--border-width: 0;
+
+	padding-top: 16px;
+}
+
+.md .welcomeHeader {
+	display: none;
 }
 </style>

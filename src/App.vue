@@ -11,7 +11,7 @@ import { Capacitor } from '@capacitor/core';
 
 const { version, canal } = require('/package')
 
-import { defineComponent, ref } from 'vue';
+import { defineComponent } from 'vue';
 import { useRoute } from 'vue-router';
 
 const { changelog } = require('/src/update')
@@ -96,6 +96,7 @@ export default defineComponent({
 	},
 	setup() {
 		// defines the tabs shown in the menu
+		// GLOBAL - Accueil
 		const appPages = [
 			{
 				title: 'Accueil',
@@ -104,13 +105,15 @@ export default defineComponent({
 				disabled: false
 			}
 		];
+
+		// SKOLENGO
 		if (localStorage.getItem("loginService") === "skolengo") {
 			appPages.push({
-				title: 'Emploi du temps',
-				url: '/timetable',
-				icon: "calendar_month",
-				disabled: false,
-			},
+					title: 'Emploi du temps',
+					url: '/timetable',
+					icon: "calendar_month",
+					disabled: false,
+				},
 				{
 					title: 'Travail à faire',
 					url: '/homework',
@@ -122,21 +125,17 @@ export default defineComponent({
 					url: '/news',
 					icon: "newspaper",
 					disabled: false,
-				},
-				{
-					title: 'Paramètres',
-					url: '/settings',
-					icon: "settings",
-					disabled: false
 				})
 		}
+
+		// PRONOTE
 		if (localStorage.getItem("loginService") === "pronote") {
 			appPages.push({
-				title: 'Emploi du temps',
-				url: '/timetable',
-				icon: "calendar_month",
-				disabled: false,
-			},
+					title: 'Emploi du temps',
+					url: '/timetable',
+					icon: "calendar_month",
+					disabled: false,
+				},
 				{
 					title: 'Travail à faire',
 					url: '/homework',
@@ -148,14 +147,17 @@ export default defineComponent({
 					url: '/grades',
 					icon: "insights",
 					disabled: false,
-				},
-				{
+				})
+
+			if (localStorage.getItem('viescolaireEnabled') == 'true') {
+				appPages.push({
 					title: 'Vie scolaire',
 					url: '/schoollife',
 					icon: "gavel",
 					disabled: false,
-				},
-				{
+				})
+			}
+			appPages.push({
 					title: 'Actualités',
 					url: '/news',
 					icon: "newspaper",
@@ -166,23 +168,14 @@ export default defineComponent({
 					url: '/conversations',
 					icon: "forum",
 					disabled: false,
-				},
-				{
-					title: 'Paramètres',
-					url: '/settings',
-					icon: "settings",
-					disabled: false
 				})
 		}
-		// hides some tabs when they are not anabled
-		if (localStorage.getItem('viescolaireEnabled') !== 'true') {
-			// remove school life tab
-			appPages.splice(4, 1);
-		}
+
+		// ECOLEDIRECTE
 		if (localStorage.getItem("loginService") === "ecoledirecte") {
-			let usercache = localStorage.getItem("UserCache");
+			const usercache = localStorage.getItem("UserCache");
 			if (usercache != null) {
-				let JSONUserCache = JSON.parse(usercache);
+				const JSONUserCache = JSON.parse(usercache);
 				JSONUserCache.modules.forEach((module1: any) => {
 					switch (module1.code) {
 						case "VIE_SCOLAIRE":
@@ -258,14 +251,17 @@ export default defineComponent({
 							break;
 					}
 				})
-				appPages.push({
-					title: 'Paramètres',
-					url: '/settings',
-					icon: "settings",
-					disabled: false
-				})
+
 			}
 		}
+
+		// GLOBAL - Paramètres
+		appPages.push({
+			title: 'Paramètres',
+			url: '/settings',
+			icon: "settings",
+			disabled: false
+		})
 
 		const route = useRoute();
 
@@ -280,25 +276,27 @@ export default defineComponent({
 	},
 	methods: {
 		checkAndroidShortcuts() {
-			AndroidShortcuts.isDynamicSupported().then((result) => {
-				if (result) {
-					AndroidShortcuts.addListener('shortcut', (response: any) => {
-						switch (response.data) {
-							case "timetable":
-								this.$router.push('/timetable');
-								break;
-							case "homework":
-								this.$router.push('/homework');
-								break;
-							case "grades":
-								this.$router.push('/grades');
-								break;
-							default:
-								break;
-						}
-					});
-				}
-			})
+			if(Capacitor.getPlatform() == "android") {
+				AndroidShortcuts.isDynamicSupported().then((result) => {
+					if (result) {
+						AndroidShortcuts.addListener('shortcut', (response: any) => {
+							switch (response.data) {
+								case "timetable":
+									this.$router.push('/timetable');
+									break;
+								case "homework":
+									this.$router.push('/homework');
+									break;
+								case "grades":
+									this.$router.push('/grades');
+									break;
+								default:
+									break;
+							}
+						});
+					}
+				})
+			}
 		},
 		async notify(title: string, body: string) {
 			LocalNotifications.schedule({
@@ -335,11 +333,11 @@ export default defineComponent({
 							}
 							else if (JSON.stringify(lastGrades[0]) == JSON.stringify(recapGrades[0])) {
 								// get last grade
-								let lastGrade = recapGrades[0];
+								const lastGrade = recapGrades[0];
 								let description = lastGrade.info.description
 
 								// get grade as 20
-								let gradeAs20 = Math.round((lastGrade.grade.value / lastGrade.grade.out_of) * 20);
+								const gradeAs20 = Math.round((lastGrade.grade.value / lastGrade.grade.out_of) * 20);
 
 								const reactions = {
 									0: 'Bon... 💀',
@@ -454,6 +452,13 @@ export default defineComponent({
 
 					document.dispatchEvent(new CustomEvent('userDataLoaded'));
 				}
+
+				// put last word of this.userData.student.name first
+				const name = this.userData.student.name.split(' ');
+				const lastName = name[name.length - 1];
+				name.pop();
+				name.unshift(lastName);
+				this.userData.student.name = name.join(' ');
 			});
 		},
 		changePage(url: string, index: number) {
@@ -467,15 +472,6 @@ export default defineComponent({
 			setTimeout(() => {
 				menu?.toggle();
 			}, 100);
-
-			if (url == "/home") {
-				StatusBar.setStyle({ style: Style.Dark })
-
-				this.changeStatusTimeout = false;
-				setTimeout(() => {
-					this.changeStatusTimeout = true;
-				}, 520);
-			}
 		},
 		async askNotifPerms() {
 			await LocalNotifications.requestPermissions();
@@ -495,12 +491,18 @@ export default defineComponent({
 			const enteringAnimation = createAnimation()
 				.addElement(opts.enteringEl)
 				.fromTo('opacity', 0, 1)
-				.duration(100);
+				.fromTo('transform', 'scale(0.9)', 'scale(1)')
+				.fromTo('filter', 'blur(15px)', 'blur(0px)')
+				.easing('cubic-bezier(.66,-0.01,0,1)')
+				.duration(400);
 
 			const leavingAnimation = createAnimation()
 				.addElement(opts.leavingEl)
 				.fromTo('opacity', 1, 0)
-				.duration(100);
+				.fromTo('transform', 'scale(1)', 'scale(1.05)')
+				.fromTo('filter', 'blur(0px)', 'blur(15px)')
+				.easing('cubic-bezier(1,0,1,.99)')
+				.duration(200);
 
 			const animation = createAnimation()
 				.addAnimation(enteringAnimation)
@@ -509,30 +511,27 @@ export default defineComponent({
 			return animation;
 		},
 		async menuOpened(isOpen: boolean) {
-			if (isOpen) {
-				StatusBar.setStyle({ style: Style.Dark })
-			}
-			else {
-				if (this.changeStatusTimeout) {
-					// get current page from URL
-					const currentUrl = window.location.pathname;
-
-					if (currentUrl !== "/home") {
+			if(Capacitor.getPlatform() !== 'web') {
+				if (isOpen) {
+					StatusBar.setStyle({ style: Style.Dark })
+				}
+				else {
+					if (this.changeStatusTimeout) {
 						StatusBar.setStyle({ style: Style.Default })
 					}
-				}
 
-				setTimeout(() => {
-					if (this.isMenuOpened == true) {
-						StatusBar.setStyle({ style: Style.Dark })
-					}
-				}, 500);
+					setTimeout(() => {
+						if (this.isMenuOpened == true) {
+							StatusBar.setStyle({ style: Style.Dark })
+						}
+					}, 500);
+				}
 			}
 		},
 		async displayDevMsg() {
 			const alert = await alertController.create({
 				header: 'Version de développement',
-				message: 'Papillon fonctionne actuellement en mode développement. <br/><br/> Certaines fonctionnalités ne sont pas encore terminées et risquent de ne pas fonctionner correctement.',
+				message: 'Papillon fonctionne actuellement en mode développement. Certaines fonctionnalités ne sont pas encore terminées et risquent de ne pas fonctionner correctement.',
 				mode: 'md',
 				buttons: ['Je comprends']
 			});
@@ -563,7 +562,7 @@ export default defineComponent({
 		},
 		setSelectedIndex(path: string) {
 			// find index of page in appPages
-			let index = this.appPages.findIndex((page) => {
+			const index = this.appPages.findIndex((page) => {
 				return page.url == path;
 			});
 
@@ -572,8 +571,8 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		$route(to, from) {
-			let path = to.path;
+		$route(to, /*from*/) {
+			const path = to.path;
 			this.setSelectedIndex(path);
 		}
 	},
@@ -586,7 +585,7 @@ export default defineComponent({
 		this.$nextTick(function () {
 			setTimeout(() => {
 				SplashScreen.hide();
-			}, 100);
+			}, 220);
 		})
 
 		// shortcuts
@@ -606,7 +605,7 @@ export default defineComponent({
 		let lastRefesh = new Date();
 
 		document.addEventListener('connectionState', (e: any) => {
-			let state = e.detail;
+			const state = e.detail;
 			this.connectedToServer = state;
 
 			lastRefesh = new Date();
@@ -614,9 +613,9 @@ export default defineComponent({
 
 		// check if lastRefesh is older than 5 minutes
 		setInterval(() => {
-			let now = new Date();
-			let diff = now.getTime() - lastRefesh.getTime();
-			let minutes = Math.floor((diff / 1000) / 60);
+			const now = new Date();
+			const diff = now.getTime() - lastRefesh.getTime();
+			const minutes = Math.floor((diff / 1000) / 60);
 
 			if (minutes >= 5) {
 				this.connectedToServer = "paused";
@@ -676,10 +675,12 @@ export default defineComponent({
 			// if viescolaireEnabled is set to false, remove school life tab
 			if (localStorage.getItem('viescolaireEnabled') !== 'true') {
 				// remove school life tab
+				if(!this.appPages.find(p => p.title === "Vie scolaire")) return;
 				this.appPages.splice(3, 1);
 			}
 			else {
 				// add school life tab
+				if(this.appPages.find(p => p.title === "Vie scolaire")) return;
 				this.appPages.splice(3, 0, {
 					title: 'Vie scolaire',
 					url: '/schoollife',
@@ -691,7 +692,7 @@ export default defineComponent({
 
 		// apply customizations
 		if (localStorage.getItem('customizations')) {
-			let customizations = JSON.parse(localStorage.getItem('customizations') as string);
+			const customizations = JSON.parse(localStorage.getItem('customizations') as string);
 
 			if (customizations.color) {
 				document.body.style.setProperty('--ion-color-primary', customizations.color.color.hex);
@@ -732,7 +733,7 @@ export default defineComponent({
 <template>
 	<ion-app>
 		<div id="debug_banner" v-if="appCanal == 'dev'" @click="displayDevMsg">
-			DEVBUILD
+			Devbuild
 		</div>
 
 		<ion-split-pane content-id="main-content">
@@ -768,7 +769,7 @@ export default defineComponent({
 							<ion-label>{{ p.title }}</ion-label>
 						</ion-item>
 					</ion-list>
-
+					<div class="completeMenuNavBar"></div>
 					<ion-list id="bottomActionsList">
 						<ion-item @click="openURL('https://docs.getpapillon.xyz')" button mode="md" lines="none"
 							:detail="false">
@@ -812,6 +813,8 @@ export default defineComponent({
 			<ion-content class="update">
 				<div class="update_inner">
 					<div id="update-header">
+						<img class="logoPapillon" src="/assets/icons/icon-192.webp" />
+
 						<h1>Quoi de neuf dans Papillon ?</h1>
 						<p>Voici les dernières nouveautés de Papillon.</p>
 					</div>
@@ -946,7 +949,7 @@ ion-menu ion-list {
 }
 
 ion-menu ion-content {
-	--background: var(--ion-item-background, var(--ion-background-color, #fff));
+	--background: var(--ion-toolbar-background);
 }
 
 ion-menu ion-content {
@@ -1075,7 +1078,7 @@ a:not(.selected) ion-menu-toggle ion-item:hover {
 
 .fade-enter,
 .fade-leave-active {
-	opacity: 0
+	opacity: 0;
 }
 
 /* updates */
@@ -1091,6 +1094,7 @@ a:not(.selected) ion-menu-toggle ion-item:hover {
 	border-radius: 10px;
 
 	margin-bottom: 30px;
+	margin-top: 30px;
 }
 
 .dark #update-header {
@@ -1119,6 +1123,18 @@ a:not(.selected) ion-menu-toggle ion-item:hover {
 #update-header p {
 	font-size: 16px;
 	opacity: 0.5;
+}
+
+#update-header .logoPapillon {
+	height: 56px;
+
+	border-radius: 12px;
+
+	margin-bottom: 10px !important;
+}
+
+.md #update-header .logoPapillon {
+	border-radius: 56px;
 }
 
 .update .warning {
@@ -1150,7 +1166,7 @@ a:not(.selected) ion-menu-toggle ion-item:hover {
 
 #bottomActionsList {
 	width: 100%;
-	background: var(--ion-background-color);
+	background: var(--ion-toolbar-background);
 
 	position: fixed;
 	padding-bottom: calc(var(--papillon-safe-area-bottom) + 20px) !important;
@@ -1161,4 +1177,8 @@ a:not(.selected) ion-menu-toggle ion-item:hover {
 
 	padding-left: 0px;
 	padding-right: 10px;
-}</style>
+}
+.completeMenuNavBar {
+	height: 120px;
+}
+</style>

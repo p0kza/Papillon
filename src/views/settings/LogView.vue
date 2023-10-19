@@ -26,9 +26,6 @@
 		IonSearchbar
 	} from '@ionic/vue';
 
-	import PapillonBackButton from '@/components/PapillonBackButton.vue';
-
-
 	export default defineComponent({
 		name: 'FolderPage',
 		components: {
@@ -80,7 +77,7 @@
 				
 				this.logs = this.baseLogs.filter(log => {
 					try {
-						let lowerLog = log.message.toLowerCase();
+						const lowerLog = log.message.toLowerCase();
 						return lowerLog.includes(query);
 					}
 					catch {
@@ -95,8 +92,8 @@
 			},
 			getAccountInfo() {
 				try {
-					let loginData = JSON.parse(atob(localStorage.getItem('loginData')));
-					let userData = JSON.parse(localStorage.getItem('userData'));
+					const loginData = JSON.parse(atob(localStorage.getItem('loginData')));
+					const userData = JSON.parse(localStorage.getItem('userData'));
 
 					this.account.name = userData.student.name;
 					this.account.etab = userData.class.school;
@@ -144,12 +141,12 @@
 			getApiVersion() {
 				const API = this.$api;
 
-				let cacheApiVersion = localStorage.getItem('apiVersion');
+				const cacheApiVersion = localStorage.getItem('apiVersion');
 
 				fetch(API + "/infos")
 					.then(response => response.json())
 					.then(result => {
-						let apiVer = result.version;
+						const apiVer = result.version;
 						localStorage.setItem('apiVersion', apiVer);
 						this.apiVersion = apiVer;
 					});
@@ -162,11 +159,11 @@
 					displayToast.presentNativeToast("Préparation des logs...");
 
 					// Post logs to hastebin (https://logs.getpapillon.xyz)
-					let response = await fetch("https://cors.api.getpapillon.xyz/https://logs.getpapillon.xyz/documents", {
+					const response = await fetch("https://cors.api.getpapillon.xyz/https://logs.getpapillon.xyz/documents", {
 						method: "POST",
 						body: this.logs.map(log => { return `[${log.type}] - ${log.date.replace('T', ' ')} - ${log.message}`; }).join("\n")
 					});
-					let result = await response.json();
+					const result = await response.json();
 
 					// Get the link
 					link = `https://logs.getpapillon.xyz/${result.key}`;
@@ -204,7 +201,7 @@ Contient **${this.logs.length}** logs
 
 **Voir les logs** : *${link}*
 > NB. Les logs sont supprimés après 48h de nos serveurs.`,
-						dialogTitle: 'Partager les logs sur Github ou Discord à l\'équipe de développement'
+						dialogTitle: 'Partager les logs sur GitHub ou Discord à l\'équipe de développement'
 					});
 				}
 				catch (e) {
@@ -281,7 +278,15 @@ Contient **${this.logs.length}** logs
 		<ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
 			<ion-refresher-content></ion-refresher-content>
 		</ion-refresher>
-
+		<IonList inset>
+			<IonItem color="primary" id="DevHelpBanner">
+				<span class="material-symbols-outlined mdls" slot="start">live_help</span>
+				<IonLabel class="ion-text-wrap">
+					<h2>Aidez les développeurs !</h2>
+					<p>Partagez vos logs sur le <a href="https://discord.gg/9bS5C9Fnvj">Discord</a> ou sur le <a href="https://github.com/PapillonApp/Papillon">GitHub</a> en cas de problème.</p>
+				</IonLabel>
+			</IonItem>
+		</IonList>
 		<div class="NoCours" v-if="logs.length == 0 && !searching">
 			<span class="material-symbols-outlined mdls">developer_mode</span>
 			<h2>Aucun rapport n'a été enregistré.</h2>
@@ -337,5 +342,9 @@ Contient **${this.logs.length}** logs
 		font-size: 16px;
 		font-family: monospace;
 		font-weight: 500;
+	}
+
+	#DevHelpBanner * {
+		color: #fff;
 	}
 </style>

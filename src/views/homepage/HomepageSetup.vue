@@ -8,9 +8,9 @@
     import { IonNav, IonPage } from '@ionic/vue';
     import HomepageView from './HomepageView.vue';
 
-    import { StatusBar, Style } from '@capacitor/status-bar';
+    //import { StatusBar, Style } from '@capacitor/status-bar';
 
-    let inner = true;
+    //let inner = true;
   
     export default {
       components: { IonNav, IonPage },
@@ -21,20 +21,7 @@
         };
       },
       methods: {
-        invertStatus() {
-            inner = !inner;
-
-            if(inner) {
-                StatusBar.setStyle({ style: Style.Default })
-            }
-            else {
-                StatusBar.setStyle({ style: Style.Dark })
-            }
-        },
         navWillChange() {
-          setTimeout(() => {
-            this.invertStatus();
-          }, 120);
           return false;
         },
         navDidChange() {
@@ -42,7 +29,7 @@
         }
       },
       mounted() {
-        StatusBar.setStyle({ style: Style.Dark })
+        return false;
       }
     };
 </script>

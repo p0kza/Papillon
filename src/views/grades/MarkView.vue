@@ -16,8 +16,6 @@
 		IonBackButton
 	} from '@ionic/vue';
 
-	import PapillonBackButton from '@/components/PapillonBackButton.vue';
-
 	import GetGrades from '@/functions/fetch/GetGrades.js';
 
 	export default defineComponent({
@@ -45,7 +43,7 @@
 			let backTitle = 'Retour';
 
 			// get current route
-			let currentRoute = this.$router.currentRoute.value;
+			const currentRoute = this.$router.currentRoute.value;
 
 			if(currentRoute.name == "Grades") {
 				backTitle = 'Notes';
@@ -81,8 +79,7 @@
 				});
 			},
 			getAverage(grades, classAvg) {
-				let allGrades = 0;
-				let count = 0;
+				const allGrades = {};
 
 				for (let i = 0; i < grades.length; i++) {
 					if(grades[i].info.significant === false && grades[i].info.significantZero === false) continue;
@@ -91,65 +88,108 @@
 
 					if(classAvg) val = parseFloat(grades[i].grade.average);
 
-					let out_of = parseInt(grades[i].grade.out_of);
+					const out_of = parseInt(grades[i].grade.out_of);
 
-					let out20 = (val / out_of) * 20;
+					const out20 = (val / out_of) * 20;
 
-					allGrades += out20 * grades[i].grade.coefficient;
-					count += grades[i].grade.coefficient;
+					// create key if not exists
+					if(!allGrades[grades[i].info.subject]) {
+						allGrades[grades[i].info.subject] = {};
+
+						allGrades[grades[i].info.subject].grades = 0;
+						allGrades[grades[i].info.subject].count = 0;
+					}
+
+					allGrades[grades[i].info.subject].grades += out20 * grades[i].grade.coefficient;
+					allGrades[grades[i].info.subject].count += grades[i].grade.coefficient;
 				}
 
-				return allGrades / count;
+				// calculate average of each subject
+				for (const subject in allGrades) {
+					allGrades[subject].average = allGrades[subject].grades / allGrades[subject].count;
+				}
+
+				// calculate average of all subjects
+				let total = 0;
+				let count = 0;
+
+				for (const subject in allGrades) {
+					total += allGrades[subject].average;
+					count++;
+				}
+
+				return total / count;
+			},
+			getSimpleAverage(grades) {
+				const allGrades = {
+					grades: 0,
+					count: 0
+				};
+
+				for (let i = 0; i < grades.length; i++) {
+					if(grades[i].info.significant === false && grades[i].info.significantZero === false) continue;
+
+					const val = parseFloat(grades[i].grade.value);
+
+					const out_of = parseInt(grades[i].grade.out_of);
+
+					const out20 = (val / out_of) * 20;
+
+					allGrades.grades += out20 * grades[i].grade.coefficient;
+					allGrades.count += grades[i].grade.coefficient;
+				}
+
+				return allGrades.grades / allGrades.count;
 			},
 			getAverageInfluence() {
 				// get current average
-				let currentAverage = this.getAverage(this.grades, false);
+				const currentAverage = this.getAverage(this.grades, false);
 
 				// get average without current mark
-				let newGrades = this.grades.filter((grade) => {
+				const newGrades = this.grades.filter((grade) => {
 					return grade.id !== this.currentGrade.id;
 				});
 
-				let newAverage = this.getAverage(newGrades, false);
+				const newAverage = this.getAverage(newGrades, false);
 
 				// get difference
-				let difference = currentAverage - newAverage;
+				const difference = currentAverage - newAverage;
 
 				this.diffAvg = difference;
 			},
 			getAverageClassInfluence() {
 				// get current average
-				let currentAverage = this.getAverage(this.grades, true);
+				const currentAverage = this.getAverage(this.grades, true);
 
 				// get average without current mark
-				let newGrades = this.grades.filter((grade) => {
+				const newGrades = this.grades.filter((grade) => {
 					return grade.id !== this.currentGrade.id;
 				});
 
-				let newAverage = this.getAverage(newGrades, true);
+				const newAverage = this.getAverage(newGrades, true);
 
 				// get difference
-				let difference = currentAverage - newAverage;
+				const difference = currentAverage - newAverage;
 
 				this.diffClassAvg = difference;
 			},
 			getAverageSubjectInfluence() {
-				let subjectGrades = this.grades.filter((grade) => {
+				const subjectGrades = this.grades.filter((grade) => {
 					return grade.info.subject === this.currentGrade.info.subject;
 				});
 
 				// get current average
-				let currentAverage = this.getAverage(subjectGrades, false);
+				const currentAverage = this.getSimpleAverage(subjectGrades, false);
 
 				// get average without current mark
-				let newGrades = subjectGrades.filter((grade) => {
+				const newGrades = subjectGrades.filter((grade) => {
 					return grade.id !== this.currentGrade.id;
 				});
 
-				let newAverage = this.getAverage(newGrades, false);
+				const newAverage = this.getSimpleAverage(newGrades, false);
 
 				// get difference
-				let difference = currentAverage - newAverage;
+				const difference = currentAverage - newAverage;
 
 				this.diffSubjectAvg = difference;
 			}
@@ -163,7 +203,7 @@
 </script>
 
 <template>
-		<IonHeader class="AppHeader" translucent collapse="fade">
+		<IonHeader class="AppHeader" translucent>
 			<IonToolbar>
 
 				<ion-buttons slot="start">
@@ -192,10 +232,9 @@
 							<h2>{{ currentGrade.grade.coefficient }}</h2>
 						</IonLabel>
 
-						<IonLabel v-if="currentGrade.info.optional || currentGrade.info.bonus || currentGrade.info.outOf20">
+						<IonLabel v-if="currentGrade.info.optional || currentGrade.info.bonus">
 							<ion-chip color="success" v-if="currentGrade.info.bonus">Bonus</ion-chip>
 							<ion-chip color="warning" v-if="currentGrade.info.optional">Optionnel</ion-chip>
-							<ion-chip color="primary" v-if="currentGrade.info.outOf20">Ramenée à 20</ion-chip>
 						</IonLabel>
 					</IonItem>
 				</IonList>

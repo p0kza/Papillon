@@ -2,7 +2,7 @@
   import { defineComponent } from 'vue';
   import { IonButtons, IonButton, IonContent, IonHeader, IonMenuButton, IonPage, IonTitle, IonToolbar, IonList, IonModal, IonItem, IonDatetime, IonRefresher, IonRefresherContent, IonLabel, IonSpinner, IonFab, IonInput, IonProgressBar, alertController, IonNavLink, IonPopover } from '@ionic/vue';
 
-  import { Share } from '@capacitor/share';
+  //import { Share } from '@capacitor/share';
   import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
   import { Dialog } from '@capacitor/dialog';
 
@@ -77,22 +77,22 @@
 	},
 	methods: {
 		createDateString(date) {
-			let dateObject = new Date(date);
-			let day_string = dateObject.toLocaleString('default', { weekday: 'long' }).slice(0, 3);
+			const dateObject = new Date(date);
+			const day_string = dateObject.toLocaleString('default', { weekday: 'long' }).slice(0, 3);
 			// return string like "jeu. 1"
 			return day_string + ". " + dateObject.getDate();
 		},
 		rnInputChanged() {
 			if(!this.isChangingDate) {
 				// get new date from rnInput
-				let newDate = new Date(this.$refs.rnInput.$el.value);
+				const newDate = new Date(this.$refs.rnInput.$el.value);
 
 				// update rn
 				this.$rn = newDate;
 				this.baseRn = newDate;
 
 				// reset swiper
-				this.$refs.swiper.$el.swiper.slideTo(this.baseIndex, 0, false);
+				this.swiper.slideTo(this.baseIndex, 0, false);
 
 				// reset days
 				this.days = [];
@@ -114,14 +114,14 @@
 			timetable = timetableEdit(timetable);
 
 			// add custom courses
-			let customCourses = JSON.parse(localStorage.getItem('customCourses')) || [];
+			const customCourses = JSON.parse(localStorage.getItem('customCourses')) || [];
 			customCourses.forEach((customCourse) => {
 				// if course is in the same day
-				let customDay = new Date(customCourse.day);
-				let currentDay = new Date(date);
+				const customDay = new Date(customCourse.day);
+				const currentDay = new Date(date);
 
-				let st = new Date(customCourse.course.time.start);
-				let en = new Date(customCourse.course.time.end);
+				const st = new Date(customCourse.course.time.start);
+				const en = new Date(customCourse.course.time.end);
 
 				// make st and en the same day as currentDay
 				st.setDate(currentDay.getDate());
@@ -142,8 +142,8 @@
 
 			// order timetable by time
 			timetable.sort((a, b) => {
-				let aStart = new Date(a.time.start);
-				let bStart = new Date(b.time.start);
+				const aStart = new Date(a.time.start);
+				const bStart = new Date(b.time.start);
 
 				return aStart - bStart;
 			});
@@ -151,22 +151,22 @@
 			return timetable;
 		},
 		resetSwiper() {
-			// this.$refs.swiper.$el.swiper.slideTo(1, 0);
+			// this.swiper.slideTo(1, 0);
 
 			this.day1.error = "STILL_LOADING";
 			this.day0.error = "STILL_LOADING";
 			this.day2.error = "STILL_LOADING";
 		},
 		async getTimetables(force, goTo, event) {
-			let startloading = setTimeout(() => {
+			const startloading = setTimeout(() => {
 				this.isLoading = true;
 			}, 500);
 
 			for (let i = 0; i < 3; i++) {
-				let index = this.swiper.realIndex + (i - 1);
+				const index = this.swiper.realIndex + (i - 1);
 
 				// get index diff
-				let indexDiff = this.baseIndex - index;
+				const indexDiff = this.baseIndex - index;
 
 				// get rn
 				let selectedRN = new Date(this.baseRn);
@@ -227,159 +227,22 @@
 			this.getTimetables(true, false, event);
 		},
 		getStringToAsciiArray(string) {
-			let charCodeArr = [];
+			const charCodeArr = [];
 			for(let i = 0; i < string.length; i++){
-				let code = string.charCodeAt(i);
+				const code = string.charCodeAt(i);
 				charCodeArr.push(code);
 			}
 
 			return charCodeArr;
 		},
-		async shareCours(cours) {
-			let sharedCourse = {
-				name: cours.data.subject,
-				teachers: cours.data.teachers.join(', ') || "Aucun professeur",
-				rooms: cours.data.rooms.join(', ') || "Aucune salle",
-				start: cours.time.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-				end: cours.time.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-				status: cours.status.status,
-				color: cours.course.color,
-				memo: cours.data.memo || "none"
-			}
-
-			// get first name of user
-			let firstName = JSON.parse(localStorage.getItem("userData")).student.name;
-			firstName = firstName.split(" ")[firstName.split(" ").length - 1];
-
-			// if custom name is set, use it instead
-			if(localStorage.getItem("customName")) {
-				firstName = localStorage.getItem("customName").split(" ")[localStorage.getItem("customName").split(" ").length - 1];
-			}
-
-			// Set customizable data to ascii
-			firstName = this.getStringToAsciiArray(firstName).join('-');
-			sharedCourse.name = this.getStringToAsciiArray(sharedCourse.name).join('-');
-			sharedCourse.teachers = this.getStringToAsciiArray(sharedCourse.teachers).join('-');
-			sharedCourse.rooms = this.getStringToAsciiArray(sharedCourse.rooms).join('-');
-			if (sharedCourse.status != null) {
-				sharedCourse.status = this.getStringToAsciiArray(sharedCourse.status).join('-');
-			} else {
-				sharedCourse.status = this.getStringToAsciiArray("null").join('-');
-			}
-
-			let urlElems = "";
-			urlElems += firstName + "$"; // first name
-			urlElems += sharedCourse.name + "$";
-			urlElems += sharedCourse.teachers + "$";
-			urlElems += sharedCourse.rooms + "$";
-			urlElems += sharedCourse.start + "$";
-			urlElems += sharedCourse.end + "$";
-			urlElems += sharedCourse.color + "$";
-			urlElems += sharedCourse.status + "$";
-			urlElems += sharedCourse.memo;
-
-			// base64 encode urlElems
-			let url = "https://getpapillon.xyz/course?c=" + btoa(urlElems);
-
-			// share url
-			await Share.share({
-				url: url,
-				dialogTitle: "Partager votre cours de " + cours.data.subject
-			});
-		},
-		async openCoursModal(cours) {
-			// calculate length
-			let len = cours.time.end - cours.time.start;
-			len = (len / 60000) + " min";
-
-			// put len in hours if it's longer than 60 minutes
-			if(len.split(' ')[0] > 59) {
-				let hours = parseInt(len.split(' ')[0] / 60);
-				let minutes = parseInt(len.split(' ')[0] % 60);
-
-				// add leading 0 if minutes is less than 10
-				if(minutes < 10) {
-					minutes = "0" + minutes;
-				}
-
-				len = `${hours} h ${minutes} min`;
-
-				if(minutes == "00") {
-					len = `${hours} h`;
-				}
-			}
-
-			let status = cours.status.status;
-			let hasStatus = status != undefined;
-
-			if (cours.status.status != undefined) {
-				if (cours.status.isOuting) {
-					status = "Vous êtes en sortie et " + cours.status.status.toLowerCase()
-				} else if (cours.status.isTest) {
-					status = "Vous avez un contrôle et " + cours.status.status.toLowerCase()
-				}
-			} else {
-				if (cours.status.isOuting) {
-					status = "Vous êtes en sortie"
-					hasStatus = true;
-				} else if (cours.status.isTest) {
-					status = "Vous avez un contrôle"
-					hasStatus = true;
-				} else {
-					status = "Le cours se déroule normalement";
-				}
-			}
-
-			let notifEnabled = false;
-
-			// check if notification is enabled
-			await LocalNotifications.getPending().then((res) => {
-				let notifs = res.notifications;
-
-				let time = new Date(cours.time.start);
-				time.setMinutes(time.getMinutes() - 5);
-
-				// check if time = schedule.at
-				notifs.forEach((notif) => {
-					let notifTime = new Date(notif.schedule.at);
-
-					if(notifTime.getTime() == time.getTime()) {
-						notifEnabled = true;
-					}
-				});
-			});
-
-			// set selectedCourse
-			this.selectedCourse = {
-				name: cours.data.subject,
-				teachers: cours.data.teachers.join(', ') || "Aucun professeur",
-				rooms: cours.data.rooms.join(', ') || "Aucune salle",
-				start: cours.time.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-				end: cours.time.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-				memo: cours.data.memo,
-				hasMemo: cours.data.hasMemo,
-				linkVirtualClassroom: cours.data.linkVirtual,
-				length: len,
-				status: status,
-				hasStatus: hasStatus,
-				isCancelled: cours.status.isCancelled,
-				custom: cours.status.isCustom,
-				id: cours.course.id,
-				originalCourse: cours,
-				notificationEnabled: notifEnabled
-			}
-
-			// open cours modal
-			this.$refs.coursModal.$el.present(cours);
-		},
 		setNewCoursModalOpen(state) {
 			this.newCoursModalOpen = state;
 		},
 		addNewCours() {
-			let st = new Date();
-			let en = new Date();
+			const st = new Date();
+			const en = new Date();
 
-			let stValue = this.$refs.newCoursStartRef.$el.value;
+			const stValue = this.$refs.newCoursStartRef.$el.value;
 
 			// this.$refs.newCoursStart.value returns HH:mm
 			st.setHours(stValue.split(':')[0]);
@@ -391,22 +254,27 @@
 
 			// check if cours is valid
 			if(stValue == "" || this.$refs.newCoursEndRef.$el.value == "" || this.$refs.newCoursNameRef.$el.value == "" || this.$refs.newCoursTeacherRef.$el.value == "" || this.$refs.newCoursRoomRef.$el.value == "") {
-				displayToast.presentError("Veuillez remplir tous les champs", "danger", "Tous les champs sont obligatoires");
+				displayToast.presentError("Veuillez remplir tous les champs", "danger", "Tous les champs sont obligatoires à l'exception du groupe");
 				return;
 			}
 
+			const color = this.$refs.newCoursColorRef.value;
+			if(color !== "#000000") {
+				subjectColor.getSubjectColor(this.$refs.newCoursNameRef.$el.value, color, true);
+			}
+
 			// create new cours
-			let newCourse = {
+			const newCourse = {
 				course: {
 					id: Math.floor(Math.random() * 10000000),
-					color: "#0066ff",
+					color: color,
 					num: Math.floor(Math.random() * 10000000),
 				},
 				data: {
 					subject: this.$refs.newCoursNameRef.$el.value,
 					teachers: [this.$refs.newCoursTeacherRef.$el.value],
 					rooms: [this.$refs.newCoursRoomRef.$el.value],
-					groupNames: [],
+					groupNames: [this.$refs.newCoursGroupRef.$el.value],
 					memo: null,
 					hasMemo: false,
 					linkVirtual: null,
@@ -426,13 +294,13 @@
 				}
 			};
 
-			let customCourse = {
+			const customCourse = {
 				"day": this.$rn,
 				"course": newCourse
 			};
 
 			// save to local storage
-			let customCourses = JSON.parse(localStorage.getItem('customCourses')) || [];
+			const customCourses = JSON.parse(localStorage.getItem('customCourses')) || [];
 			customCourses.push(customCourse);
 			localStorage.setItem('customCourses', JSON.stringify(customCourses));
 
@@ -464,14 +332,14 @@
 		async unsetNotif(course) {
 			// find notification
 			await LocalNotifications.getPending().then((res) => {
-				let notifs = res.notifications;
+				const notifs = res.notifications;
 
-				let time = new Date(course.time.start);
+				const time = new Date(course.time.start);
 				time.setMinutes(time.getMinutes() - 5);
 
 				// check if time = schedule.at
 				notifs.forEach(async (notif) => {
-					let notifTime = new Date(notif.schedule.at);
+					const notifTime = new Date(notif.schedule.at);
 
 					if(notifTime.getTime() == time.getTime()) {
 						await LocalNotifications.cancel({ notifications: [notif] });
@@ -539,10 +407,10 @@
 							return;
 						}
 
-						let selectedCalendar = result.availableCalendars[selected.index];
+						const selectedCalendar = result.availableCalendars[selected.index];
 
 						// for each course of the day
-						let todayCourses = this.days[this.currentIndex];
+						const todayCourses = this.days[this.currentIndex];
 
 						if(todayCourses.length <= 0) {
 							await Dialog.alert({
@@ -559,13 +427,13 @@
 						for (const course of todayCourses) {
 							if(!course.status.isCancelled) {
 								// create event
-								let id = course.course.id;
-								let subject = course.data.subject;
-								let rooms = course.data.rooms.join(', ');
-								let teachers = course.data.teachers.join(', ');
+								const id = course.course.id;
+								const subject = course.data.subject;
+								const rooms = course.data.rooms.join(', ');
+								const teachers = course.data.teachers.join(', ');
 								
-								let startMillis = new Date(course.time.start).getTime();
-								let endMillis = new Date(course.time.end).getTime();
+								const startMillis = new Date(course.time.start).getTime();
+								const endMillis = new Date(course.time.end).getTime();
 
 								let status = "Le cours se déroule normalement.";
 								if(course.status.status) {
@@ -631,6 +499,7 @@
 				name: '',
 				teacher: '',
 				room: '',
+				groupNames: '',
 				start: '',
 				end: '',
 				length: '',
@@ -642,10 +511,13 @@
 			isChangingDate: false,
 			isLoading: true,
 			swiper: null,
+			loaded: false,
 		}
 	},
 	mounted() {
 		this.swiper = this.$refs.swiper.$el.swiper;
+
+		this.loaded = true;
 		
 		// sets presentingElement
 		this.presentingElement = this.$refs.pageHere.$el;
@@ -749,35 +621,42 @@
 				:virtualIndex="index"
 				>
 				<IonList>
-					<IonNavLink v-for="cours in days[`${index}`]" :key="cours.id" router-direction="forward" :component="CoursView" :componentProps="{urlCours: encodeURIComponent(JSON.stringify(cours))}">
-						<CoursElement
-							:subject="cours.data.subject"
-							:teachers="cours.data.teachers.join(', ') || 'Pas de professeur'"
-							:rooms="cours.data.rooms.join(', ') || 'Pas de salle'"
-							:memo="cours.data.hasMemo"
-							:start="cours.time.start"
-							:end="cours.time.end"
-							:color="cours.course.color"
-							:sameTime="cours.course.sameTime"
-							:status="cours.status.status"
-							:isCancelled="cours.status.isCancelled"
-							:isDetention="cours.status.isDetention"
-							:isExempted="cours.status.isExempted"
-							:isOuting="cours.status.isOuting"
-							:isTest="cours.status.isTest"
-							:distance="cours.course.distance"
-							:lengthCours="cours.course.lengthCours"
-						/>
-					</IonNavLink>
+					<transition-group name="CoursAnim" tag="div" id="DayData">
+						<div v-if="currentIndex == index && loaded && days[index].length > 0">
+							<IonNavLink v-for="cours in days[`${index}`]" :key="cours.id" router-direction="forward" :component="CoursView" :componentProps="{urlCours: encodeURIComponent(JSON.stringify(cours))}">
+								<CoursElement
+									:subject="cours.data.subject"
+									:teachers="cours.data.teachers.join(', ') || 'Pas de professeur'"
+									:rooms="cours.data.rooms.join(', ') || 'Pas de salle'"
+									:groupNames="cours.data.groupNames.join(', ') || null"
+									:memo="cours.data.hasMemo"
+									:start="cours.time.start"
+									:end="cours.time.end"
+									:color="cours.course.color"
+									:sameTime="cours.course.sameTime"
+									:status="cours.status.status"
+									:isCancelled="cours.status.isCancelled"
+									:isDetention="cours.status.isDetention"
+									:isExempted="cours.status.isExempted"
+									:isOuting="cours.status.isOuting"
+									:isTest="cours.status.isTest"
+									:distance="cours.course.distance"
+									:lengthCours="cours.course.lengthCours"
+								/>
+							</IonNavLink>
+						</div>
+					</transition-group>
 
 						<div v-if="days[`${index}`]">
-							<div class="NoCours" v-if="days[`${index}`].length == 0 && !days[`${index}`].error && !days[`${index}`].loading">
-								<h1>😌</h1>
-								<h2>Aucun cours aujourd'hui</h2>
-								<p>Sélectionnez un autre jour dans le calendrier ou balayez l’écran pour changer de journée.</p>
+							<Transition name="CoursAnim">
+								<div class="NoCours" v-if="days[`${index}`].length == 0 && !days[`${index}`].error && !days[`${index}`].loading && currentIndex == index && loaded">
+									<h1>😌</h1>
+									<h2>Aucun cours aujourd'hui</h2>
+									<p>Sélectionnez un autre jour dans le calendrier ou balayez l’écran pour changer de journée.</p>
 
-								<ion-button mode="md" fill="clear" @click="changernPickerModalOpen(true)" class="changeDayButton">Ouvrir le calendrier</ion-button>
-							</div>
+									<ion-button mode="md" fill="clear" @click="changernPickerModalOpen(true)" class="changeDayButton">Ouvrir le calendrier</ion-button>
+								</div>
+							</Transition>
 
 							<div class="NoCours" v-if="days[`${index}`].length == 0 && days[`${index}`].error == 'ERR_NETWORK' && !days[`${index}`].loading && !connected">
 								<h1>🌏</h1>
@@ -806,7 +685,11 @@
 						<ion-buttons slot="start">
 							<ion-button @click="setNewCoursModalOpen(false)">Annuler</ion-button>
 						</ion-buttons>
-						<ion-title>Ajouter un cours</ion-title>
+
+						<IonTitle>
+							<ion-input type="text" name="CourseTitle" ref="newCoursNameRef" placeholder="Nom du cours"></ion-input>
+						</IonTitle>
+
 						<ion-buttons slot="end">
 							<ion-button @click="addNewCours()" color="primary">Ajouter</ion-button>
 						</ion-buttons>
@@ -814,19 +697,19 @@
 				</IonHeader>
 				<ion-content>
 					<ion-list inset>
-						<ion-item>
-							<span class="material-symbols-outlined mdls" slot="start" style="margin-right:5px">edit</span>
-							<ion-input type="text" name="CourseTitle" ref="newCoursNameRef" placeholder="Nom du cours"></ion-input>
-						</ion-item>
-
-						<ion-item>
-							<span class="material-symbols-outlined mdls" slot="start" style="margin-right:5px">pin_drop</span>
+						<ion-item class="textInput">
+							<span class="material-symbols-outlined mdls" slot="start" style="margin-right:15px">location_on</span>
 							<ion-input type="text" name="Place" ref="newCoursRoomRef" placeholder="Lieu"></ion-input>
 						</ion-item>
 
-						<ion-item>
-							<span class="material-symbols-outlined mdls" slot="start" style="margin-right:5px">Person</span>
+						<ion-item class="textInput">
+							<span class="material-symbols-outlined mdls" slot="start" style="margin-right:15px">face</span>
 							<ion-input type="text" name="Person" ref="newCoursTeacherRef" placeholder="Professeur"></ion-input>
+						</ion-item>
+
+						<ion-item class="textInput">
+							<span class="material-symbols-outlined mdls" slot="start" style="margin-right:15px">groups</span>
+							<ion-input type="text" name="Group" ref="newCoursGroupRef" placeholder="Groupe (optionnel)"></ion-input>
 						</ion-item>
 					</ion-list>
 
@@ -844,6 +727,16 @@
 							<ion-label>Heure de fin</ion-label>
 							<div class="timeInput" slot="end">
 								<ion-input class="timeInInput" name="End" ref="newCoursEndRef" type="time" value="13:30"></ion-input>
+							</div>
+						</ion-item>
+					</ion-list>
+
+					<ion-list inset class="only-md">
+						<ion-item class="input">
+							<span class="material-symbols-outlined mdls" slot="start" style="margin-right:15px">palette</span>
+							<ion-label>Couleur</ion-label>
+							<div slot="end">
+								<input type="color" ref="newCoursColorRef"/>
 							</div>
 						</ion-item>
 					</ion-list>
@@ -1031,8 +924,20 @@
 		--border-width: 0 0 0 0 !important;
 	}
 
+	.ios .newCoursModal {
+		--ion-toolbar-background: var(--ion-color-step-25, #f9f9f9) !important;
+	}
+
 	.ios .newCoursModal ion-content::part(scroll) {
-		background: var(--ion-toolbar-background, var(--ion-color-step-50, #f7f7f7));
+		background: var(--ion-color-step-25, #f9f9f9);
+	}
+
+	.dark .ios .newCoursModal {
+		--ion-toolbar-background: var(--ion-color-step-50, #1f1f1f) !important;
+	}
+
+	.dark .ios .newCoursModal ion-content::part(scroll) {
+		background: var(--ion-color-step-25, #111);
 	}
 
 	.ios .newCoursModal ion-list.list-inset {
@@ -1041,19 +946,27 @@
 	}
 
 	.ios .newCoursModal ion-list.list-inset > * {
-		--background : var(--ion-background-color) !important;
+		--background : var(--ion-plain-background-color) !important;
 	}
 
 	.dark .ios .newCoursModal ion-list.list-inset {
-		background : var(--ion-color-step-100) !important;
+		background : var(--ion-color-step-50) !important;
 	}
 
 	.dark .ios .newCoursModal ion-list.list-inset > * {
-		--background : var(--ion-color-step-100) !important;
+		--background : var(--ion-color-step-50) !important;
 	}
 
 	.dark .ios .newCoursModal .timeInput {
-		background: var(--ion-color-step-150) !important;
+		background: var(--ion-color-step-100) !important;
+	}
+
+	.ios .newCoursModal {
+		margin-left: 5px;
+	}
+
+	.ios .newCoursModal .mdls {
+		opacity: 0.5 !important;
 	}
 
 	.ios .newCoursModal .timeInput {
@@ -1088,5 +1001,13 @@
 	.expand_title {
 		height: 18px !important;
 		opacity: 0.4;
+	}
+
+	#title.md {
+		margin-top: -4px !important;
+	}
+
+	#title.ios {
+		margin-top: -2px !important;
 	}
 </style>

@@ -41,7 +41,7 @@ ion-content::-webkit-scrollbar {
 }
 
 :root {
-    --papillon-font: 'Golos Text', sans-serif;
+    --papillon-font: 'Fixel', sans-serif;
     --ion-box-shadow: 0 1px 2px #00000005, 0 2px 6px #00000005;
 }
 
@@ -56,14 +56,15 @@ h2, h3 {
 
 ion-title.title-large {
     font-family: var(--papillon-font);
-    font-weight: 300 !important;
+    font-weight: 500 !important;
     letter-spacing: -0.5px;
 }
 
 ion-title.title-default {
     font-family: var(--papillon-font);
-    font-weight: 600 !important;
+    font-weight: 500 !important;
     font-size: 17px !important;
+    line-height: 17px !important;
 }
 
 /* (MD) Searchbar */
@@ -325,6 +326,7 @@ ion-item .mdls[slot="start"] {
 
 ion-toast::part(header) {
     font-size: 16px;
+    line-height: 19px !important;
     font-weight: 500;
     font-family: var(--papillon-font) !important;
 }
@@ -353,16 +355,26 @@ ion-modal.modal-sheet ion-header ion-toolbar:first-child {
     --border-color: #414141 !important;
 }
 
-ion-header ion-toolbar ion-title:not(.title-large) {
-    font-size: 17px;
-    font-weight: 500 !important;
-}
-
 ion-header ion-toolbar ion-title ion-chip {
     margin-left: 10px;
     font-weight: 600;
     font-size: 14px;
     margin-top: 1px !important;
+}
+
+ion-chip .mdls {
+    margin-right: 5px !important;
+}
+
+ion-chip.small {
+    padding: 3px 8px;
+    height: fit-content;
+}
+
+ion-chip.small .mdls {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
 }
 
 .ios ion-header ion-toolbar ion-title {
@@ -439,6 +451,10 @@ ion-list.list-inset.md ion-list-header {
     border-radius: 12px !important;
 }
 
+ion-modal.ios ion-list.list-inset {
+    box-shadow: none !important;
+}
+
 /* action sheet */
 ion-action-sheet {
     --ion-color-primary: #0075ff !important;
@@ -493,6 +509,7 @@ ion-fab .mdls {
 
     font-size: 11px;
     font-weight: 600;
+    text-transform: uppercase;
 
     box-shadow: 1px 1px 5px #00000055;
 }
@@ -514,7 +531,7 @@ ion-alert.md .btn_secondary {
 
 /* animations */
 .ElemAnim-enter-active {
-    transition: 0.4s cubic-bezier(0.77,0.15,0.06,1.11);
+    transition: 0.5s cubic-bezier(0.77,0.15,0.06,1.11);
 }
 
 .ElemAnim-leave-active {
@@ -523,9 +540,61 @@ ion-alert.md .btn_secondary {
 
 .ElemAnim-enter-from, .ElemAnim-leave-to {
     opacity: 0;
-    transform: translateY(200px) scale(0.7);
+    transform: translateY(200px) scale(0.5);
 
     margin: 5px 16px;
+}
+
+.ios .ElemAnim-enter-from, .ElemAnim-leave-to {
+	filter: blur(12px);
+}
+
+.ElemScale-enter-active {
+    transition: 0.2s cubic-bezier(.5,0,0,1);
+}
+
+.ElemScale-leave-active {
+    transition: 0.2s cubic-bezier(.5,0,0,1);
+}
+
+.ElemScale-enter-from, .ElemScale-leave-to {
+    opacity: 0;
+    transform: scale(0.7);
+
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.CoursAnim-enter-active {
+    transition: 0.35s cubic-bezier(0.77,0.15,0.06,1.11);
+}
+
+.CoursAnim-leave-active {
+	transition: 0.0s cubic-bezier(.5,0,0,1);
+}
+
+.CoursAnim-enter-from, .CoursAnim-leave-to {
+	opacity: 0;
+	transform: translateY(20px) scale(0.9);
+}
+
+.CoursAnimLower-enter-active {
+    transition: 0.35s cubic-bezier(0.77,0.15,0.06,1.11);
+}
+
+.CoursAnimLower-leave-active {
+	transition: 0.1s cubic-bezier(.5,0,0,1);
+}
+
+.CoursAnimLower-enter-from, .CoursAnim-leave-to {
+	opacity: 0;
+	transform: translateY(150px) scale(0.85);
+}
+
+.ios .CoursAnim-enter-from, .CoursAnim-leave-to {
+	filter: blur(12px);
 }
 
 /* links */
@@ -571,4 +640,11 @@ ion-list.listGroup:not(.contains-nav-link) ion-item:last-child {
 .listGroupTitle p {
     padding: 10px 0px;
     padding-left: 16px;
+}
+
+.small_chip {
+    padding: 2px 8px !important;
+    height: fit-content !important;
+    margin-top: 0px !important;
+    transform: translateY(1px);
 }

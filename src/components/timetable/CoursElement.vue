@@ -28,6 +28,11 @@
 				required: false,
 				default: "Pas de salle",
 			},
+			groupNames: {
+				type: String,
+				required: false,
+				default: null,
+			},
 			memo: {
 				type: Boolean,
 				required: false,
@@ -102,6 +107,7 @@
 				coursPourcentVisible: false,
 				intervalUpdateProgressDiv: null,
 				showPastProgress: localStorage.getItem("tweakProgressBarShowPast") != "false",
+				disableShowGroup: localStorage.getItem('disableShowGroup'),
 			};
 		},
 		setup() {
@@ -115,7 +121,7 @@
 				//check in localstorage if progress bar is enabled
 				if (localStorage.getItem("tweakProgressBar") != "true") return false;
 
-				let now = new Date();
+				const now = new Date();
 
 				if (`${now.getUTCDate()}-${now.getMonth()}` != `${this.start.getUTCDate()}-${this.start.getMonth()}`) {
 					if (this.classes.includes("progressDivEnabled")) {
@@ -136,7 +142,7 @@
 				}
 			},
 			updateProgressDiv() {
-				let now = new Date();
+				const now = new Date();
 
 				// if is not today clear interval and reset progress bar to 0
 				if (`${now.getUTCDate()}-${now.getMonth()}` != `${this.start.getUTCDate()}-${this.start.getMonth()}`) {
@@ -184,7 +190,7 @@
 					this.end.getMinutes() * 60 +
 					this.end.getSeconds()
 				) {
-					let coursPourcent =
+					const coursPourcent =
 						((now.getHours() * 3600 +
 								now.getMinutes() * 60 +
 								now.getSeconds() -
@@ -244,8 +250,8 @@
 	<div class="dist" v-if="distance && !sameTime"></div>
 	<div :class="classes + isCancelled" :style="`--backgroundColor: ${color};`" v-if="!sameTime" @click="openCours()">
 		<div class="CoursTime">
-			<p class="start">{{ start.toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}</p>
-			<p class="end">{{ end.toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}</p>
+			<a class="text start">{{ start.toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}</a>
+			<a class="text end">{{ end.toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}</a>
 		</div>
 		<div class="cours">
 			<ion-ripple-effect></ion-ripple-effect>
@@ -256,43 +262,53 @@
 
 			<ion-label>
 				<div class="CoursData">
-					<h3 class="CoursName">{{ subject }}</h3>
+					<a class="text CoursName">{{ subject }}</a>
 
-					<div class="CoursInfoContainer">
-						<div class="CoursInfo room" v-if="rooms !== null">
-							<span class="material-symbols-outlined smol" slot="start">location_on</span>
+					<div>
+						<div class="CoursInfoContainer">
+							<div class="CoursInfo room" v-if="rooms !== null">
+								<span class="material-symbols-outlined smol" slot="start">location_on</span>
 
-							<p>{{ rooms }}</p>
+								<a class="text">{{ rooms }}</a>
+							</div>
+							<div class="separator" v-if="rooms !== null"></div>
+							<div class="CoursInfo">
+								<span class="material-symbols-outlined smol" slot="start">face</span>
+
+								<a class="text">{{ teachers }}</a>
+							</div>
 						</div>
-						<div class="separator" v-if="rooms !== null"></div>
-						<div class="CoursInfo">
-							<span class="material-symbols-outlined smol" slot="start">face</span>
 
-							<p>{{ teachers }}</p>
+						<div class="CoursInfoContainer" v-if="disableShowGroup == 'true' && groupNames !== null">
+							<div class="CoursInfo">
+								<span class="material-symbols-outlined smol" slot="start">groups</span>
+
+								<a class="text">{{ groupNames.replace(/[[\]]/g, '').replace(/_/g, ' ') }}</a>
+							</div>
 						</div>
 					</div>
 
-					<p class="CoursInfo Status" v-if="status">
+					<a class="text CoursInfo Status" v-if="status">
 						<span v-if="!isCancelled" class="material-symbols-outlined smol" slot="start">info</span>
 						<span v-if="isCancelled" class="material-symbols-outlined smol" slot="start">error</span>
 
 						{{ status }}
-					</p>
+					</a>
 
-					<p class="CoursInfo Status" v-if="isTest">
+					<a class="text CoursInfo Status" v-if="isTest">
 						<span class="material-symbols-outlined smol" slot="start">quiz</span>
 						Vous avez un contrôle
-					</p>
+					</a>
 
-					<p class="CoursInfo Status" v-if="isOuting">
+					<a class="text CoursInfo Status" v-if="isOuting">
 						<span class="material-symbols-outlined smol" slot="start">directions_walk</span>
 						Sortie scolaire
-					</p>
+					</a>
 
-					<p class="CoursInfo Status" v-if="memo">
+					<a class="text CoursInfo Status" v-if="memo">
 						<span class="material-symbols-outlined smol" slot="start">sticky_note_2</span>
 						Contient un mémo
-					</p>
+					</a>
 				</div>
 			</ion-label>
 		</div>
@@ -403,6 +419,8 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		width: calc(100vw - 145px);
+		font-family: var(--papillon-font);
+		margin-bottom: 4px;
 	}
 
 	.light .cours {
@@ -433,7 +451,7 @@
 	.CoursInfoContainer {
 		margin-top: 2px;
 		display: flex;
-		align-items: flex-start;
+		align-items: center;
 		gap: 10px;
 
 		width: calc(100vw - 145px);
@@ -441,8 +459,15 @@
 
 	.CoursInfoContainer .separator {
 		width: 2px;
-		height: 90%;
-		background: #00000010;
+		height: 15px;
+
+		border-radius: 300px;
+		margin-top: -3px;
+		
+		background: var(--backgroundColor);
+		filter: brightness(0.6);
+
+		opacity: 0.25;
 	}
 
 	.dark .CoursInfoContainer .separator {
@@ -463,7 +488,6 @@
 		opacity: 0.7;
 
 		width: fit-content;
-		max-width: 55%;
 
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -479,9 +503,15 @@
 		filter: brightness(1);
 	}
 
-	.CoursInfo p {
+	a.text {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.CoursInfo .text {
 		font-family: var(--papillon-font) !important;
 		font-size: 16px;
+		line-height: 18px;
 	}
 
 	.CoursInfo span {
@@ -554,7 +584,8 @@
 		padding: 0px 0px;
 		padding-left: 5px;
 
-		width: 60px;
+		min-width: 50px !important;
+		max-width: 50px !important;
 	}
 
 	.CoursTime * {
@@ -563,22 +594,22 @@
 	}
 
 	.CoursTime .start {
-		margin-bottom: 3px;
+		margin-bottom: 1px;
 
-		font-size: 1.1em;
+		font-size: 1.15em;
 		font-weight: 500;
 
+		letter-spacing: 0.2px;
+
 		font-family: var(--papillon-font);
-		font-feature-settings: 'tnum' on, 'lnum' on !important;
-		letter-spacing: -0.3px;
 	}
 
 	.CoursTime .end {
 		opacity: 0.7;
 		font-size: 0.85em;
+		letter-spacing: 0.3px;
 		font-weight: 400;
 		font-family: var(--papillon-font);
-		font-feature-settings: 'tnum' on, 'lnum' on !important;
 	}
 
 	.progressDiv {
